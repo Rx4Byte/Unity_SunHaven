@@ -14,6 +14,9 @@
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
   </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -32,21 +35,26 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>dep\0Harmony.dll</HintPath>
+    <Reference Include="0Harmony, Version=2.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\.dependencies\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>dep\BepInEx.dll</HintPath>
+      <HintPath>..\.dependencies\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="PSS.Database, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\.dependencies\PSS.Database.dll</HintPath>
     </Reference>
     <Reference Include="QFSW.QC">
-      <HintPath>dep\QFSW.QC.dll</HintPath>
+      <HintPath>..\.dependencies\QFSW.QC.dll</HintPath>
     </Reference>
     <Reference Include="Sirenix.Serialization">
-      <HintPath>dep\Sirenix.Serialization.dll</HintPath>
+      <HintPath>..\.dependencies\Sirenix.Serialization.dll</HintPath>
     </Reference>
     <Reference Include="SunHaven.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>dep\SunHaven.Core.dll</HintPath>
+      <HintPath>..\.dependencies\SunHaven.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -57,23 +65,23 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>dep\UnityEngine.dll</HintPath>
+      <HintPath>..\.dependencies\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>dep\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\.dependencies\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Physics2DModule">
-      <HintPath>dep\UnityEngine.Physics2DModule.dll</HintPath>
+      <HintPath>..\.dependencies\UnityEngine.Physics2DModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandExtension.cs" />
+    <Compile Include="CommandMethodes.cs" />
+    <Compile Include="Commands.cs" />
     <Compile Include="ItemDatabaseWrapper.cs" />
+    <Compile Include="Models\Command.cs" />
+    <Compile Include="Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
 </Project>

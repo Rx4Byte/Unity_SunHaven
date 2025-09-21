@@ -7,10 +7,9 @@ namespace ControllerBypass
 {
     public class PluginInfo
     {
-        public const string PLUGIN_AUTHOR = "Rx4Byte";
         public const string PLUGIN_NAME = "Controller Deactivator";
         public const string PLUGIN_GUID = "com.Rx4Byte.ControllerDeactivator";
-        public const string PLUGIN_VERSION = "1.0.0";
+        public const string PLUGIN_VERSION = "1.0.1";
     }
 
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]

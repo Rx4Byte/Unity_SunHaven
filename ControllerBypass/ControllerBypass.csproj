@@ -32,10 +32,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>M:\SteamLibrary\steamapps\common\Sun Haven\BepInEx\core\0Harmony.dll</HintPath>
+      <HintPath>..\.dependencies\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>M:\SteamLibrary\steamapps\common\Sun Haven\BepInEx\core\BepInEx.dll</HintPath>
+      <HintPath>..\.dependencies\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -46,13 +46,13 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>M:\SteamLibrary\steamapps\common\Sun Haven\Sun Haven_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\.dependencies\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>M:\SteamLibrary\steamapps\common\Sun Haven\Sun Haven_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\.dependencies\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>M:\SteamLibrary\steamapps\common\Sun Haven\Sun Haven_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>..\.dependencies\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -60,8 +60,4 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>copy /Y $(TargetName)$(TargetExt) "M:\SteamLibrary\steamapps\common\Sun Haven\BepInEx\plugins"
-copy /Y $(TargetName)$(TargetExt) "P:\#Docs\!Doc\!Modding, Coding, Infos, much more\!RxneshReleaseFiles\SunHaven"</PostBuildEvent>
-  </PropertyGroup>
 </Project>

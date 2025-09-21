@@ -12,7 +12,6 @@ namespace YearCorrection
 {
     public class PluginInfo
     {
-        public const string PLUGIN_AUTHOR = "Rx4Byte";
         public const string PLUGIN_NAME = "Year Correction";
         public const string PLUGIN_GUID = "com.Rx4Byte.YearCorrection";
         public const string PLUGIN_VERSION = "1.0";
