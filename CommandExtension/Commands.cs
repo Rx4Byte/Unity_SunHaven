@@ -1,311 +1,404 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using CommandExtension.Models;
 
 namespace CommandExtension
 {
     public static class Commands
-    {
-        // Core prefix
-        public const string CmdPrefix = "!";
+	{
+		//// Core 
+		// prefix
+		public const string CmdPrefix = "!";
 
-        // Debug
-        public const string CmdKeyDebug = "debug";
+		// Debug
+		public const string CmdKeyDebug = "debug";
         public const string CmdDesDebug = "Debug Methode";
         public const string CmdUseDebug = CmdPrefix + CmdKeyDebug;
 
-        // Help
-        public const string CmdKeyHelp = "help";
+		// Help
+		public const string CmdKeyHelp = "help";
         public const string CmdDesHelp = "Displays a list of all available commands.";
         public const string CmdUseHelp = CmdPrefix + CmdKeyHelp;
 
-        // State
-        public const string CmdKeyState = "state";
+		// State
+		public const string CmdKeyState = "state";
         public const string CmdDesState = "Shows which commands are currently activated.";
         public const string CmdUseState = CmdPrefix + CmdKeyState;
 
-        // Feedback toggle
-        public const string CmdKeyFeedbackDisabled = "feedback";
+		// Feedback toggle
+		public const string CmdKeyFeedbackDisabled = "feedback";
         public const string CmdDesFeedbackDisabled = "Toggles chat feedback for command execution.";
         public const string CmdUseFeedbackDisabled = CmdPrefix + CmdKeyFeedbackDisabled;
 
-        // Command target name
-        public const string CmdKeyName = "name";
+		// Command target name
+		public const string CmdKeyName = "name";
         public const string CmdDesName = "Sets or resets the player name that commands will target.";
         public const string CmdUseName = CmdPrefix + CmdKeyName + " [playerName]*";
 
-        // Mine commands
-        public const string CmdKeyMineReset = "minereset";
+		//// Mine commands
+		// Minereset
+		public const string CmdKeyMineReset = "minereset";
         public const string CmdDesMineReset = "Reset the current mine.";
         public const string CmdUseMineReset = CmdPrefix + CmdKeyMineReset;
 
-        public const string CmdKeyMineClear = "mineclear";
+		// Mineclear
+		public const string CmdKeyMineClear = "mineclear";
         public const string CmdDesMineClear = "Removes all rocks and ores from the mine.";
         public const string CmdUseMineClear = CmdPrefix + CmdKeyMineClear;
 
-        public const string CmdKeyMineOverfill = "mineoverfill";
-        public const string CmdDesMineOverfill = "Fills the mine completely with rocks and ores.";
+		// Mineoverfill
+		public const string CmdKeyMineOverfill = "mineoverfill";
+        public const string CmdDesMineOverfill = "Fills the mine completely.";
         public const string CmdUseMineOverfill = CmdPrefix + CmdKeyMineOverfill;
 
-        // Time commands
-        public const string CmdKeyPause = "pause";
+		//// Time commands
+		// Pause
+		public const string CmdKeyPause = "pause";
         public const string CmdDesPause = "Toggles the game’s time pause on or off.";
         public const string CmdUsePause = CmdPrefix + CmdKeyPause;
 
-        public const string CmdKeyCustomDaySpeed = "timespeed";
-        public const string CmdDesCustomDaySpeed = "Sets or toggles a custom day-length multiplier.";
-        public const string CmdUseCustomDaySpeed = CmdPrefix + CmdKeyCustomDaySpeed + " [multiplier|reset]";
+		// Timespeed
+		public const string CmdKeyTimespeed = "timespeed";
+        public const string CmdDesTimespeed = "Sets or toggles minutes as game hour.";
+        public const string CmdUseTimespeed = CmdPrefix + CmdKeyTimespeed + " [multiplier|reset]";
 
-        public const string CmdKeySetDate = "time";
-        public const string CmdDesSetDate = "Sets the current hour or day in the day/night cycle.";
-        public const string CmdUseSetDate = CmdPrefix + CmdKeySetDate + " [h|d] [value]";
+		// Time
+		public const string CmdKeyDate = "time";
+        public const string CmdDesDate = "Sets the current hour or day in the day/night cycle.";
+        public const string CmdUseDate = CmdPrefix + CmdKeyDate + " [h|d] [value]";
 
-        public const string CmdKeyWeather = "weather";
-        public const string CmdDesWeather = "Changes weather to raining, heatwave, or clear.";
+		// Weather
+		public const string CmdKeyWeather = "weather";
+        public const string CmdDesWeather = "Set raining, heatwave, or clear.";
         public const string CmdUseWeather = CmdPrefix + CmdKeyWeather + " [raining|heatwave|clear]";
 
-        public const string CmdKeySetSeason = "season";
-        public const string CmdDesSetSeason = "Changes the current season.";
-        public const string CmdUseSetSeason = CmdPrefix + CmdKeySetSeason + " [Spring|Summer|Fall|Winter]";
+		// Season
+		public const string CmdKeySeason = "season";
+        public const string CmdDesSeason = "Changes the current season.";
+        public const string CmdUseSeason = CmdPrefix + CmdKeySeason + " [Spring|Summer|Fall|Winter]";
 
-        public const string CmdKeyIncDecYear = "years";
-        public const string CmdDesIncDecYear = "Advances or rewinds the in-game year by increments of four months.";
-        public const string CmdUseIncDecYear = CmdPrefix + CmdKeyIncDecYear + " (-)[years]";
+		// Years
+		public const string CmdKeyYear = "years";
+        public const string CmdDesYear = "Increase or Decrease the Year.";
+        public const string CmdUseYear = CmdPrefix + CmdKeyYear + " (-)[years]";
 
-        // Currency commands
-        public const string CmdKeyMoney = "money";
+		//// Currency commands
+		// Money
+		public const string CmdKeyMoney = "money";
         public const string CmdDesMoney = "Alias for !coins.";
         public const string CmdUseMoney = CmdPrefix + CmdKeyMoney + " (-)[amount]";
 
-        public const string CmdKeyCoins = "coins";
-        public const string CmdDesCoins = "Adds or subtracts Coins from the player.";
+		// Coins
+		public const string CmdKeyCoins = "coins";
+        public const string CmdDesCoins = "Adds or removes Coins.";
         public const string CmdUseCoins = CmdPrefix + CmdKeyCoins + " (-)[amount]";
 
-        public const string CmdKeyOrbs = "orbs";
-        public const string CmdDesOrbs = "Adds or subtracts Orbs from the player.";
+		// Orbs
+		public const string CmdKeyOrbs = "orbs";
+        public const string CmdDesOrbs = "Adds or removes Orbs.";
         public const string CmdUseOrbs = CmdPrefix + CmdKeyOrbs + " (-)[amount]";
 
-        public const string CmdKeyTickets = "tickets";
-        public const string CmdDesTickets = "Adds or subtracts Tickets from the player.";
+		// Tickets
+		public const string CmdKeyTickets = "tickets";
+        public const string CmdDesTickets = "Adds or removes Tickets.";
         public const string CmdUseTickets = CmdPrefix + CmdKeyTickets + " (-)[amount]";
 
-        public const string CmdKeyDevKit = "devkit";
+		// Devkit
+		public const string CmdKeyDevKit = "devkit";
         public const string CmdDesDevKit = "Grants the developer kit items.";
         public const string CmdUseDevKit = CmdPrefix + CmdKeyDevKit;
 
-        // Player toggles
-        public const string CmdKeyJumper = "jumper";
-        public const string CmdDesJumper = "Toggles ability to jump through objects.";
-        public const string CmdUseJumper = CmdPrefix + CmdKeyJumper;
+		//// Player toggles
+		// Jumper
+		public const string CmdKeyJumper = "jumper";
+		public const string CmdDesJumper = $"Alias for '{CmdPrefix + CmdKeyJumpOver}'.";
+		public const string CmdUseJumper = CmdPrefix + CmdKeyJumper;
 
-        public const string CmdKeyDasher = "dasher";
-        public const string CmdDesDasher = "Toggles infinite dash charges.";
-        public const string CmdUseDasher = CmdPrefix + CmdKeyDasher;
+		// Jumpover
+		public const string CmdKeyJumpOver = "jumpover";
+		public const string CmdDesJumpOver = "Toggles ability to jump through objects.";
+		public const string CmdUseJumpOver = CmdPrefix + CmdKeyJumpOver;
 
-        public const string CmdKeyManaFill = "manafill";
-        public const string CmdDesManaFill = "Refills the player’s mana to maximum.";
+		// Dasher
+		public const string CmdKeyDasher = "dasher";
+		public const string CmdDesDasher = $"Alias for '!{CmdPrefix + CmdKeyDashInfinite}'.";
+		public const string CmdUseDasher = CmdPrefix + CmdKeyDasher;
+
+		// DashInf
+		public const string CmdKeyDashInfinite = "dashinf";
+		public const string CmdDesDashInfinite = "Toggles infinite dash charges.";
+		public const string CmdUseDashInfinite = CmdPrefix + CmdKeyDashInfinite;
+
+		// Manafill
+		public const string CmdKeyManaFill = "manafill";
+        public const string CmdDesManaFill = "Refills the player’s mana.";
         public const string CmdUseManaFill = CmdPrefix + CmdKeyManaFill;
 
-        public const string CmdKeyManaInf = "manainf";
-        public const string CmdDesManaInf = "Toggles infinite mana.";
-        public const string CmdUseManaInf = CmdPrefix + CmdKeyManaInf;
+		// ManaInf
+		public const string CmdKeyManaInfinite = "manainf";
+        public const string CmdDesManaInfinite = "Toggles infinite mana.";
+        public const string CmdUseManaInfinite = CmdPrefix + CmdKeyManaInfinite;
 
-        public const string CmdKeyHealthFill = "healthfill";
-        public const string CmdDesHealthFill = "Refills the player’s health to maximum.";
+		// Healthfill
+		public const string CmdKeyHealthFill = "healthfill";
+        public const string CmdDesHealthFill = "Refills the player’s health.";
         public const string CmdUseHealthFill = CmdPrefix + CmdKeyHealthFill;
 
-        public const string CmdKeyNoHit = "nohit";
+		// Nohit
+		public const string CmdKeyNoHit = "nohit";
         public const string CmdDesNoHit = "Toggles invincibility (no damage taken).";
         public const string CmdUseNoHit = CmdPrefix + CmdKeyNoHit;
 
-        public const string CmdKeyNoClip = "noclip";
-        public const string CmdDesNoClip = "Toggles noclip mode (walk through walls).";
-        public const string CmdUseNoClip = CmdPrefix + CmdKeyNoClip;
+		// Noclip
+		public const string CmdKeyNoclip = "noclip";
+        public const string CmdDesNoClip = "Toggles noclip (walk through walls).";
+        public const string CmdUseNoClip = CmdPrefix + CmdKeyNoclip;
 
-        // Misc toggles
-        public const string CmdKeyUI = "ui";
-        public const string CmdDesUI = "Toggles the game’s HUD and UI elements.";
+		// Sleep
+		public const string CmdKeySleep = "sleep";
+		public const string CmdDesSleep = "Sleeps through the night.";
+		public const string CmdUseSleep = CmdPrefix + CmdKeySleep;
+
+		//// Misc toggles
+		// UI
+		public const string CmdKeyUI = "ui";
+        public const string CmdDesUI = "Toggles the game’s HUD.";
         public const string CmdUseUI = CmdPrefix + CmdKeyUI + " [on|off]*";
 
-        public const string CmdKeyAutoFillMuseum = "autofillmuseum";
-        public const string CmdDesAutoFillMuseum = "Toggles auto-fill of museum bundles on entry.";
+		// Autofillmuseum
+		public const string CmdKeyAutoFillMuseum = "autofillmuseum";
+        public const string CmdDesAutoFillMuseum = "Toggles auto-fill museum.";
         public const string CmdUseAutoFillMuseum = CmdPrefix + CmdKeyAutoFillMuseum;
 
-        public const string CmdKeyCheatFillMuseum = "cheatfillmuseum";
-        public const string CmdDesCheatFillMuseum = "Toggles cheat-fill of museum bundles on entry.";
+		// Cheatfillmuseum
+		public const string CmdKeyCheatFillMuseum = "cheatfillmuseum";
+        public const string CmdDesCheatFillMuseum = "Toggles cheat-fill museum.";
         public const string CmdUseCheatFillMuseum = CmdPrefix + CmdKeyCheatFillMuseum;
 
-        public const string CmdKeyFixYear = "yearfix";
-        public const string CmdDesFixYear = "Toggles corrected year calculation.";
-        public const string CmdUseFixYear = CmdPrefix + CmdKeyFixYear;
+		// Yearfix
+		public const string CmdKeyYearFix = "yearfix";
+        public const string CmdDesYearFix = "Toggles corrected year calculation.";
+        public const string CmdUseYearFix = CmdPrefix + CmdKeyYearFix;
 
-        public const string CmdKeyCheats = "cheats";
+		// Cheats
+		public const string CmdKeyCheats = "cheats";
         public const string CmdDesCheats = "Toggles the game’s built-in cheats and hotkeys.";
         public const string CmdUseCheats = CmdPrefix + CmdKeyCheats;
 
-        // NPC relationship
-        public const string CmdKeyUnMarry = "divorce";
-        public const string CmdDesUnMarry = "Divorces a single or all NPCs.";
-        public const string CmdUseUnMarry = CmdPrefix + CmdKeyUnMarry + " [name|all]";
+		//// NPC relationship
+		// Relationship
+		public const string CmdKeyRelationship = "relationship";
+		public const string CmdDesRelationship = "Sets or adds to NPC relationship.";
+		public const string CmdUseRelationship = CmdPrefix + CmdKeyRelationship + " [name|all] [value] [add]*";
 
-        public const string CmdKeyMarry = "marry";
-        public const string CmdDesMarry = "Marries a single or all NPCs.";
-        public const string CmdUseMarry = CmdPrefix + CmdKeyMarry + " [name|all]";
+		// Marry
+		public const string CmdKeyMarry = "marry";
+		public const string CmdDesMarry = "Marries a single or all NPCs.";
+		public const string CmdUseMarry = CmdPrefix + CmdKeyMarry + " [name|all]";
 
-        public const string CmdKeyRelationship = "relationship";
-        public const string CmdDesRelationship = "Sets or adds to NPC relationship values.";
-        public const string CmdUseRelationship = CmdPrefix + CmdKeyRelationship + " [name|all] [value] [add]*";
+		// Unmarry
+		public const string CmdKeyUnmarry = "unmarry";
+		public const string CmdDesUnmarry = "Alias for !divorce.";
+		public const string CmdUseUnmarry = CmdPrefix + CmdKeyUnmarry + " [name|all]";
 
-        // Items
-        public const string CmdKeyGive = "give";
-        public const string CmdDesGive = "Gives item(s) to the player by ID or name.";
-        public const string CmdUseGive = CmdPrefix + CmdKeyGive + " [ID|name] [amount]";
+		// Divorce
+		public const string CmdKeyDivorce = "divorce";
+		public const string CmdDesDivorce = "Divorces a single or all NPCs.";
+		public const string CmdUseDivorce = CmdPrefix + CmdKeyDivorce + " [name|all]";
 
-        public const string CmdKeyShowItems = "items";
-        public const string CmdDesShowItems = "Lists items matching the given name.";
-        public const string CmdUseShowItems = CmdPrefix + CmdKeyShowItems + " [name]";
+		//// Items
+		// Give
+		public const string CmdKeyGiveItem = "give";
+        public const string CmdDesGiveItem = "Gives item/s by ID or name.";
+        public const string CmdUseGiveItem = CmdPrefix + CmdKeyGiveItem + " [ID|name] [amount]";
 
-        public const string CmdKeyPrintCategorizedItems = "getitemids";
-        public const string CmdDesPrintCategorizedItems = "Prints item IDs filtered by category.";
-        public const string CmdUsePrintCategorizedItems = CmdPrefix + CmdKeyPrintCategorizedItems + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]";
+		// List
+		public const string CmdKeyShowItem = "list";
+        public const string CmdDesShowItem = "Lists items matching the given name.";
+        public const string CmdUseShowItem = CmdPrefix + CmdKeyShowItem + " [name]";
 
-        public const string CmdKeyShowItemIdOnHover = "showidonhover";
-        public const string CmdDesShowItemIdOnHover = "Displays the item ID when hovering.";
-        public const string CmdUseShowItemIdOnHover = CmdPrefix + CmdKeyShowItemIdOnHover;
+        public const string CmdKeyShowCategorizedItems = "items";
+        public const string CmdDesShowCategorizedItems = "Show or Give Items filtered by category.";
+        public const string CmdUseShowCategorizedItems = CmdPrefix + CmdKeyShowCategorizedItems + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]";
 
-        public const string CmdKeyShowItemIdOnTooltip = "showid";
-        public const string CmdDesShowItemIdOnTooltip = "Toggles showing item IDs in tooltips.";
-        public const string CmdUseShowItemIdOnTooltip = CmdPrefix + CmdKeyShowItemIdOnTooltip;
+		// ShowId
+		public const string CmdKeyShowItemInfoOnTooltip = "showid";
+        public const string CmdDesShowItemInfoOnTooltip = "Toggles showing item IDs in tooltips.";
+        public const string CmdUseShowItemInfoOnTooltip = CmdPrefix + CmdKeyShowItemInfoOnTooltip;
 
-        // Teleport
-        public const string CmdKeyTeleport = "tp";
+		// ShowIdOnHover
+		public const string CmdKeyShowItemInfoOnHover = "showidonhover";
+		public const string CmdDesShowItemInfoOnHover = "Show item ID in Chat on hover.";
+		public const string CmdUseShowItemInfoOnHover = CmdPrefix + CmdKeyShowItemInfoOnHover;
+
+		//// Teleport
+		// Tp
+		public const string CmdKeyTeleport = "tp";
         public const string CmdDesTeleport = "Teleports the player to a location.";
         public const string CmdUseTeleport = CmdPrefix + CmdKeyTeleport + " [location]";
 
-        public const string CmdKeyTeleportLocations = "tps";
-        public const string CmdDesTeleportLocations = "Lists all available teleport destinations.";
+		// Tps
+		public const string CmdKeyTeleportLocations = "tps";
+        public const string CmdDesTeleportLocations = "Lists all available teleport locations.";
         public const string CmdUseTeleportLocations = CmdPrefix + CmdKeyTeleportLocations;
 
-        // Sleep
-        public const string CmdKeySleep = "sleep";
-        public const string CmdDesSleep = "Sleeps through the night.";
-        public const string CmdUseSleep = CmdPrefix + CmdKeySleep;
-
-        public static readonly Dictionary<string, Command> GeneratedCommands = new Dictionary<string, Command>() {
+        public static Dictionary<string, Command> GeneratedCommands { get; private set; } = new() {
             // Debug
-            { CmdPrefix + CmdKeyDebug,              new Command(CmdPrefix + CmdKeyDebug,                  CmdDesDebug,                CmdUseDebug,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Debug(commandInput)) },
+            { CmdKeyDebug,					new Command(CmdPrefix + CmdKeyDebug,					CmdDesDebug,					CmdUseDebug,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Debug(commandInput)) },
 
             // Help
-            { CmdPrefix + CmdKeyHelp,               new Command(CmdPrefix + CmdKeyHelp,                   CmdDesHelp,                 CmdUseHelp,                 CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Help(commandInput)) },
+            { CmdKeyHelp,					new Command(CmdPrefix + CmdKeyHelp,						CmdDesHelp,						CmdUseHelp,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Help(commandInput)) },
 
             // State
-            { CmdPrefix + CmdKeyState,              new Command(CmdPrefix + CmdKeyState,                  CmdDesState,                CmdUseState,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_State(commandInput)) },
+            { CmdKeyState,					new Command(CmdPrefix + CmdKeyState,					CmdDesState,					CmdUseState,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_State(commandInput)) },
 
             // Feedback toggle
-            { CmdPrefix + CmdKeyFeedbackDisabled,   new Command(CmdPrefix + CmdKeyFeedbackDisabled,       CmdDesFeedbackDisabled,     CmdUseFeedbackDisabled,     CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_ToggleFeedback(commandInput)) },
+          //{ CmdKeyFeedbackDisabled,		new Command(CmdPrefix + CmdKeyFeedbackDisabled,			CmdDesFeedbackDisabled,			CmdUseFeedbackDisabled,			CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_FeedbackDisabled(commandInput)) },
 
-            // Command target name
-            { CmdPrefix + CmdKeyName,               new Command(CmdPrefix + CmdKeyName,                   CmdDesName,                 CmdUseName,                 CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_SetName(commandInput)) },
+            // Command-Target name 
+          //{ CmdKeyName,					new Command(CmdPrefix + CmdKeyName,						CmdDesName,						CmdUseName,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_SetName(commandInput)) },
 
-            // Mine commands
-            { CmdPrefix + CmdKeyMineReset,          new Command(CmdPrefix + CmdKeyMineReset,              CmdDesMineReset,            CmdUseMineReset,            CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ResetMines(commandInput)) },
-            { CmdPrefix + CmdKeyMineOverfill,       new Command(CmdPrefix + CmdKeyMineOverfill,           CmdDesMineOverfill,         CmdUseMineOverfill,         CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_OverfillMines(commandInput)) },
-            { CmdPrefix + CmdKeyMineClear,          new Command(CmdPrefix + CmdKeyMineClear,              CmdDesMineClear,            CmdUseMineClear,            CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ClearMines(commandInput)) },
+            // Mine Commands
+            { CmdKeyMineReset,				new Command(CmdPrefix + CmdKeyMineReset,				CmdDesMineReset,				CmdUseMineReset,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_MinesReset(commandInput)) },
+            { CmdKeyMineOverfill,			new Command(CmdPrefix + CmdKeyMineOverfill,				CmdDesMineOverfill,				CmdUseMineOverfill,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_MinesOverfill(commandInput)) },
+            { CmdKeyMineClear,				new Command(CmdPrefix + CmdKeyMineClear,				CmdDesMineClear,				CmdUseMineClear,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_MinesClear(commandInput)) },
 
-            // Time commands
-            { CmdPrefix + CmdKeyPause,              new Command(CmdPrefix + CmdKeyPause,                  CmdDesPause,                CmdUsePause,                CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_Pause(commandInput)) },
-            { CmdPrefix + CmdKeyCustomDaySpeed,     new Command(CmdPrefix + CmdKeyCustomDaySpeed,         CmdDesCustomDaySpeed,       CmdUseCustomDaySpeed,       CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_CustomDaySpeed(commandInput)) },
-            { CmdPrefix + CmdKeySetDate,            new Command(CmdPrefix + CmdKeySetDate,                CmdDesSetDate,              CmdUseSetDate,              CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ChangeDate(commandInput)) },
-            { CmdPrefix + CmdKeyWeather,            new Command(CmdPrefix + CmdKeyWeather,                CmdDesWeather,              CmdUseWeather,              CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ChangeWeather(commandInput)) },
-            { CmdPrefix + CmdKeySetSeason,          new Command(CmdPrefix + CmdKeySetSeason,              CmdDesSetSeason,            CmdUseSetSeason,            CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_SetSeason(commandInput)) },
-            { CmdPrefix + CmdKeyIncDecYear,         new Command(CmdPrefix + CmdKeyIncDecYear,             CmdDesIncDecYear,           CmdUseIncDecYear,           CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Year(commandInput)) },
-          //{ CmdPrefix + CmdFixYear,               new Command(CmdDesYear,                 CmdUseYear,                 CommandState.Activated),
+            // Time Commands
+            { CmdKeyPause,					new Command(CmdPrefix + CmdKeyPause,					CmdDesPause,					CmdUsePause,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_Pause(commandInput)) },
+            { CmdKeyTimespeed,				new Command(CmdPrefix + CmdKeyTimespeed,				CmdDesTimespeed,				CmdUseTimespeed,				CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_Timespeed(commandInput)) },
+            { CmdKeyDate,					new Command(CmdPrefix + CmdKeyDate,						CmdDesDate,						CmdUseDate,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Date(commandInput)) },
+            { CmdKeyWeather,				new Command(CmdPrefix + CmdKeyWeather,					CmdDesWeather,					CmdUseWeather,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Weather(commandInput)) },
+            { CmdKeySeason,					new Command(CmdPrefix + CmdKeySeason,					CmdDesSeason,					CmdUseSeason,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Season(commandInput)) },
+            { CmdKeyYear,					new Command(CmdPrefix + CmdKeyYear,						CmdDesYear,						CmdUseYear,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Year(commandInput)) },
+          //{ CmdKeyYearFix,				new Command(CmdPrefix + CmdKeyYearFix,                  CmdDesYearFix,                  CmdUseYearFix,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_ToggleYearFix(commandInput)) },
 
-            // Currency commands
-            { CmdPrefix + CmdKeyMoney,              new Command(CmdPrefix + CmdKeyMoney,                  CmdDesMoney,                CmdUseMoney,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_AddMoney(commandInput)) },
-            { CmdPrefix + CmdKeyCoins,              new Command(CmdPrefix + CmdKeyCoins,                  CmdDesCoins,                CmdUseCoins,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_AddMoney(commandInput)) },
-            { CmdPrefix + CmdKeyOrbs,               new Command(CmdPrefix + CmdKeyOrbs,                   CmdDesOrbs,                 CmdUseOrbs,                 CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_AddOrbs(commandInput)) },
-            { CmdPrefix + CmdKeyTickets,            new Command(CmdPrefix + CmdKeyTickets,                CmdDesTickets,              CmdUseTickets,              CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_AddTickets(commandInput)) },
+            // Currency Commands
+            { CmdKeyMoney,					new Command(CmdPrefix + CmdKeyMoney,					CmdDesMoney,					CmdUseMoney,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Coins(commandInput)) },
+            { CmdKeyCoins,					new Command(CmdPrefix + CmdKeyCoins,					CmdDesCoins,					CmdUseCoins,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Coins(commandInput)) },
+            { CmdKeyOrbs,					new Command(CmdPrefix + CmdKeyOrbs,						CmdDesOrbs,						CmdUseOrbs,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Orbs(commandInput)) },
+            { CmdKeyTickets,				new Command(CmdPrefix + CmdKeyTickets,					CmdDesTickets,					CmdUseTickets,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Tickets(commandInput)) },
 
-            // Player
-            { CmdPrefix + CmdKeySleep,              new Command(CmdPrefix + CmdKeySleep,                  CmdDesSleep,                CmdUseSleep,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Sleep(commandInput)) },
-            { CmdPrefix + CmdKeyManaFill,           new Command(CmdPrefix + CmdKeyManaFill,               CmdDesManaFill,             CmdUseManaFill,             CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ManaFill(commandInput)) },
-            { CmdPrefix + CmdKeyManaInf,            new Command(CmdPrefix + CmdKeyManaInf,                CmdDesManaInf,              CmdUseManaInf,              CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_InfiniteMana(commandInput)) },
-            { CmdPrefix + CmdKeyHealthFill,         new Command(CmdPrefix + CmdKeyHealthFill,             CmdDesHealthFill,           CmdUseHealthFill,           CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_HealthFill(commandInput)) },
-            { CmdPrefix + CmdKeyNoHit,              new Command(CmdPrefix + CmdKeyNoHit,                  CmdDesNoHit,                CmdUseNoHit,                CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_NoHit(commandInput)) },
-            { CmdPrefix + CmdKeyNoClip,             new Command(CmdPrefix + CmdKeyNoClip,                 CmdDesNoClip,               CmdUseNoClip,               CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_NoClip(commandInput)) },
-            { CmdPrefix + CmdKeyJumper,             new Command(CmdPrefix + CmdKeyJumper,                 CmdDesJumper,               CmdUseJumper,               CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_Jumper(commandInput)) },
-            { CmdPrefix + CmdKeyDasher,             new Command(CmdPrefix + CmdKeyDasher,                 CmdDesDasher,               CmdUseDasher,               CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_InfiniteAirSkips(commandInput)) },
+            // Player Commands
+            { CmdKeySleep,					new Command(CmdPrefix + CmdKeySleep,					CmdDesSleep,					CmdUseSleep,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Sleep(commandInput)) },
+            { CmdKeyManaFill,				new Command(CmdPrefix + CmdKeyManaFill,					CmdDesManaFill,					CmdUseManaFill,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_ManaFill(commandInput)) },
+            { CmdKeyManaInfinite,			new Command(CmdPrefix + CmdKeyManaInfinite,				CmdDesManaInfinite,				CmdUseManaInfinite,				CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_ManaInfinite(commandInput)) },
+            { CmdKeyHealthFill,				new Command(CmdPrefix + CmdKeyHealthFill,				CmdDesHealthFill,				CmdUseHealthFill,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_HealthFill(commandInput)) },
+            { CmdKeyNoHit,					new Command(CmdPrefix + CmdKeyNoHit,					CmdDesNoHit,					CmdUseNoHit,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_NoHit(commandInput)) },
+            { CmdKeyNoclip,					new Command(CmdPrefix + CmdKeyNoclip,					CmdDesNoClip,					CmdUseNoClip,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_Noclip(commandInput)) },
+		  //{ CmdKeyJumper,                 new Command(CmdPrefix + CmdKeyJumper,                   CmdDesJumper,                   CmdUseJumper,                   CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_JumpOver(commandInput)) },
+			{ CmdKeyJumpOver,				new Command(CmdPrefix + CmdKeyJumpOver,                 CmdDesJumpOver,                 CmdUseJumpOver,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_JumpOver(commandInput)) },
+		  //{ CmdKeyDasher,					new Command(CmdPrefix + CmdKeyDasher,                   CmdDesDasher,                   CmdUseDasher,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_DashInfinite(commandInput)) },
+			{ CmdKeyDashInfinite,           new Command(CmdPrefix + CmdKeyDashInfinite,             CmdDesDashInfinite,             CmdUseDashInfinite,             CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_DashInfinite(commandInput)) },
 
-            // Misc
-            { CmdPrefix + CmdKeyAutoFillMuseum,     new Command(CmdPrefix + CmdKeyAutoFillMuseum,         CmdDesAutoFillMuseum,       CmdUseAutoFillMuseum,       CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_AutoFillMuseum(commandInput)) },
-            { CmdPrefix + CmdKeyCheatFillMuseum,    new Command(CmdPrefix + CmdKeyCheatFillMuseum,        CmdDesCheatFillMuseum,      CmdUseCheatFillMuseum,      CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_CheatFillMuseum(commandInput)) },
-            { CmdPrefix + CmdKeyUI,                 new Command(CmdPrefix + CmdKeyUI,                     CmdDesUI,                   CmdUseUI,                   CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ToggleUI(commandInput)) },
-            { CmdPrefix + CmdKeyCheats,             new Command(CmdPrefix + CmdKeyCheats,                 CmdDesCheats,               CmdUseCheats,               CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_ToggleCheats(commandInput)) },
+            // Misc Commands
+            { CmdKeyAutoFillMuseum,			new Command(CmdPrefix + CmdKeyAutoFillMuseum,			CmdDesAutoFillMuseum,			CmdUseAutoFillMuseum,			CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_AutoFillMuseum(commandInput)) },
+            { CmdKeyCheatFillMuseum,		new Command(CmdPrefix + CmdKeyCheatFillMuseum,			CmdDesCheatFillMuseum,			CmdUseCheatFillMuseum,			CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_CheatFillMuseum(commandInput)) },
+            { CmdKeyUI,						new Command(CmdPrefix + CmdKeyUI,						CmdDesUI,						CmdUseUI,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_UI(commandInput)) },
+            { CmdKeyCheats,					new Command(CmdPrefix + CmdKeyCheats,					CmdDesCheats,					CmdUseCheats,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_Cheats(commandInput)) },
 
-            // NPC relationship
-            { CmdPrefix + CmdKeyRelationship,       new Command(CmdPrefix + CmdKeyRelationship,           CmdDesRelationship,         CmdUseRelationship,         CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Relationship(commandInput)) },
-            { CmdPrefix + CmdKeyUnMarry,            new Command(CmdPrefix + CmdKeyUnMarry,                CmdDesUnMarry,              CmdUseUnMarry,              CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_UnMarry(commandInput)) },
-            { CmdPrefix + CmdKeyMarry,              new Command(CmdPrefix + CmdKeyMarry,                  CmdDesMarry,                CmdUseMarry,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Marry(commandInput)) },
+            // NPC relationship Commands
+            { CmdKeyRelationship,			new Command(CmdPrefix + CmdKeyRelationship,				CmdDesRelationship,				CmdUseRelationship,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_Relationship(commandInput)) },
+            { CmdKeyDivorce,				new Command(CmdPrefix + CmdKeyDivorce,					CmdDesDivorce,					CmdUseDivorce,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Divorce(commandInput)) },
+            { CmdKeyMarry,					new Command(CmdPrefix + CmdKeyMarry,					CmdDesMarry,					CmdUseMarry,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Marry(commandInput)) },
 
-            // Items
-            { CmdPrefix + CmdKeyGive,               new Command(CmdPrefix + CmdKeyGive,                   CmdDesGive,                 CmdUseGive,                 CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_GiveItemByIdOrName(commandInput)) },
-            { CmdPrefix + CmdKeyShowItems,          new Command(CmdPrefix + CmdKeyShowItems,              CmdDesShowItems,            CmdUseShowItems,            CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ShowID(commandInput)) },
-            { CmdPrefix + CmdKeyPrintCategorizedItems,       new Command(CmdPrefix + CmdKeyPrintCategorizedItems,           CmdDesPrintCategorizedItems,         CmdUsePrintCategorizedItems,         CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_PrintItemIds(commandInput)) },
-            { CmdPrefix + CmdKeyShowItemIdOnHover,  new Command(CmdPrefix + CmdKeyShowItemIdOnHover,      CmdDesShowItemIdOnHover,    CmdUseShowItemIdOnHover,    CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_PrintItemIdOnHover(commandInput)) },
-          //{ CmdPrefix + CmdAppendItemDescWithId,  new Command(CmdPrefix + CmdAppendItemDescWithId,      CmdDesendItemDescWithId,    CmdUseendItemDescWithId,    CommandState.Deactivated),
-            { CmdPrefix + CmdKeyDevKit,             new Command(CmdPrefix + CmdKeyDevKit,                 CmdDesDevKit,               CmdUseDevKit,               CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_GiveDevItems(commandInput)) },
+            // Item Commands
+            { CmdKeyGiveItem,				new Command(CmdPrefix + CmdKeyGiveItem,					CmdDesGiveItem,					CmdUseGiveItem,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_GiveItem(commandInput)) },
+            { CmdKeyShowItem,				new Command(CmdPrefix + CmdKeyShowItem,					CmdDesShowItem,					CmdUseShowItem,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_ShowItem(commandInput)) },
+            { CmdKeyShowCategorizedItems,	new Command(CmdPrefix + CmdKeyShowCategorizedItems,		CmdDesShowCategorizedItems,		CmdUseShowCategorizedItems,		CommandState.None,        commandInput => CommandMethodes.CommandFunction_ShowCategorizedItems(commandInput)) },
+            { CmdKeyShowItemInfoOnHover,	new Command(CmdPrefix + CmdKeyShowItemInfoOnHover,		CmdDesShowItemInfoOnHover,		CmdUseShowItemInfoOnHover,		CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_ShowItemInfoOnHover(commandInput)) },
+            { CmdKeyShowItemInfoOnTooltip,	new Command(CmdPrefix + CmdKeyShowItemInfoOnTooltip,	CmdDesShowItemInfoOnTooltip,	CmdUseShowItemInfoOnTooltip,	CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_ShowItemInfoOnTooltip(commandInput)) },
+			{ CmdKeyDevKit,					new Command(CmdPrefix + CmdKeyDevKit,					CmdDesDevKit,					CmdUseDevKit,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_DevKit(commandInput)) },
 
             // Teleport
-            { CmdPrefix + CmdKeyTeleport,           new Command(CmdPrefix + CmdKeyTeleport,               CmdDesTeleport,             CmdUseTeleport,             CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_TeleportToScene(commandInput)) },
-            { CmdPrefix + CmdKeyTeleportLocations,  new Command(CmdPrefix + CmdKeyTeleportLocations,      CmdDesTeleportLocations,    CmdUseTeleportLocations,    CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_TeleportLocations(commandInput)) }
+            { CmdKeyTeleport,				new Command(CmdPrefix + CmdKeyTeleport,					CmdDesTeleport,					CmdUseTeleport,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_TeleportToScene(commandInput)) },
+            { CmdKeyTeleportLocations,		new Command(CmdPrefix + CmdKeyTeleportLocations,		CmdDesTeleportLocations,		CmdUseTeleportLocations,		CommandState.None,        commandInput => CommandMethodes.CommandFunction_TeleportLocations(commandInput)) }
         };
 
-        public static void ProcessCommands(string commandInput)
+
+		/// <summary>
+		/// Parses the input string to determine the command key (first token) and, if a matching
+		/// command exists in the GeneratedCommands dictionary, invokes that command with the full
+		/// input string as argument.
+		/// </summary>
+		/// <param name="commandInput">The full input string.</param>
+		public static void ProcessCommands(string commandInput)
         {
-            string commandKey = commandInput.Split(' ')[0];
-            
-            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
+			string commandKey = commandInput.Split([' '], System.StringSplitOptions.RemoveEmptyEntries)[0];
+			string resolvedCommandKey = ResolveCommandAlias(commandKey);
+			commandInput = commandInput.Replace(commandKey, resolvedCommandKey);
+			
+			if (GeneratedCommands.TryGetValue(resolvedCommandKey, out Command command))
             {
                 command.Invoke(commandInput);
             }
-
         }
 
-        public static Command GetCommandByKey(string commandKey)
+		/// <summary>
+		/// Resolves known command aliases to their command keys.
+		/// If the provided key matches a known alias, the corresponding key is returned;
+		/// otherwise the original key is returned unchanged.
+		/// </summary>
+		/// <param name="commandKey">The input command key or alias to resolve.</param>
+		/// <returns>The command key for the alias, or the original key if no alias matches.</returns>
+		public static string ResolveCommandAlias(string commandKey)
+		{
+			if (commandKey.Equals(CmdKeyDasher))
+			{
+				return CmdKeyDashInfinite;
+			}
+
+			if (commandKey.Equals(CmdKeyJumper))
+			{
+				return CmdKeyJumpOver;
+			}
+
+			if (commandKey.Equals(CmdKeyUnmarry))
+			{
+				return CmdKeyDivorce;
+			}
+
+			return commandKey;
+		}
+
+		/// <summary>
+		/// Attempts to find a Command by its key and returns it if found; otherwise returns null.
+		/// </summary>
+		/// <param name="commandKey">The key/name of the command to look up.</param>
+		/// <returns>The matching Command instance or null when not present.</returns>
+		public static Command GetCommandByKey(string commandKey)
         {
-            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
-            {
-                return command;
-            }
+			return GeneratedCommands.TryGetValue(commandKey, out Command command) ? command : null;
+		}
 
-            return null;
-        }
-
-        public static bool IsCommandActive(string commandKey)
+		/// <summary>
+		/// Checks whether the command identified by <paramref name="commandKey"/> exists and is
+		/// currently in the Activated state.
+		/// </summary>
+		/// <param name="commandKey">The key/name of the command to check.</param>
+		/// <returns>True if the command exists and is Activated; otherwise false.</returns>
+		public static bool IsCommandActive(string commandKey)
         {
-            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
-            {
-                return command.State == CommandState.Activated;
-            }
+			return GeneratedCommands.TryGetValue(commandKey, out Command command) && command.State == CommandState.Activated;
+		}
 
-            return false;
-        }
-
-        public static bool ToggleCommandState(string commandKey)
+		/// <summary>
+		/// Toggles the state of the command identified by <paramref name="commandKey"/> between
+		/// Activated and Deactivated. If the command is found, its state is flipped and the
+		/// method returns true if the new state is Activated; otherwise returns false.
+		/// </summary>
+		/// <param name="commandKey">The key/name of the command to toggle.</param>
+		/// <returns>True when the command was found and is now Activated; false when not found or now Deactivated.</returns>
+		public static bool ToggleCommandState(string commandKey)
         {
-            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
-            {
-                return (command.State = (command.State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated)) == CommandState.Activated;
-            }
+			return GeneratedCommands.TryGetValue(commandKey, out Command command) && (command.State = command.State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated) == CommandState.Activated;
+		}
 
-            return false;
-        }
-
-        public static void SetCommandState(string commandKey, CommandState commandState)
+		/// <summary>
+		/// Sets the state of the command identified by <paramref name="commandKey"/> to the
+		/// specified <paramref name="commandState"/> if the command exists.
+		/// </summary>
+		/// <param name="commandKey">The key/name of the command to modify.</param>
+		/// <param name="commandState">The desired new state for the command.</param>
+		public static void SetCommandState(string commandKey, CommandState commandState)
         {
             if (GeneratedCommands.TryGetValue(commandKey, out Command command))
             {
@@ -313,7 +406,13 @@ namespace CommandExtension
             }
         }
 
-        public static void SetCommandState(string commandKey, bool activate)
+		/// <summary>
+		/// Sets the state of the command identified by <paramref name="commandKey"/> based on
+		/// the boolean <paramref name="activate"/> flag: Activated when true, Deactivated when false.
+		/// </summary>
+		/// <param name="commandKey">The key/name of the command to modify.</param>
+		/// <param name="activate">True to activate the command, false to deactivate it.</param>
+		public static void SetCommandState(string commandKey, bool activate)
         {
             if (GeneratedCommands.TryGetValue(commandKey, out Command command))
             {

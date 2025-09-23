@@ -12,12 +12,12 @@ namespace ControllerBypass
         public const string PLUGIN_VERSION = "1.0.1";
     }
 
-    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+#pragma warning disable IDE0060 // Remove unused parameter
+	[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public partial class ControllerBypass : BaseUnityPlugin
     {
         private void Awake() => Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
 
-        #region INPUT PATCHES
         [HarmonyPatch(typeof(Input), "GetButton")]
         class Patch_GetButton
         {
@@ -26,6 +26,7 @@ namespace ControllerBypass
                 return __result = false;
             }
         }
+
         [HarmonyPatch(typeof(Input), "GetButtonDown")]
         class Patch_GetButtonDown
         {
@@ -34,6 +35,7 @@ namespace ControllerBypass
                 return __result = false;
             }
         }
+
         [HarmonyPatch(typeof(Input), "GetButtonUp")]
         class Patch_GetButtonUp
         {
@@ -42,6 +44,7 @@ namespace ControllerBypass
                 return __result = false;
             }
         }
+
         [HarmonyPatch(typeof(Input), "GetAxis")]
         class Patch_GetAxis
         {
@@ -55,6 +58,7 @@ namespace ControllerBypass
                 return true;
             }
         }
+
         [HarmonyPatch(typeof(Input), "GetAxisRaw")]
         class Patch_GetAxisRaw
         {
@@ -68,6 +72,6 @@ namespace ControllerBypass
                 return true;
             }
         }
-        #endregion
-    }
+	}
+#pragma warning restore IDE0060 // Remove unused parameter
 }

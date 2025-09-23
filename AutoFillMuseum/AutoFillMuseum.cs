@@ -33,7 +33,7 @@ namespace AutoFillMuseum
         [HarmonyPatch(typeof(HungryMonster), nameof(HungryMonster.SetMeta))]
         private static void HungryMonster_SetMeta(HungryMonster __instance)
         {
-            if (!ModEnabled.Value || __instance.bundleType != BundleType.MuseumBundle || Player.Instance == null || Player.Instance.Inventory == null || __instance.sellingInventory == null)
+            if (!ModEnabled.Value || __instance.bundleType != BundleType.MuseumBundle || Player.Instance?.Inventory == null || __instance.sellingInventory == null)
             {
                 return;
             }

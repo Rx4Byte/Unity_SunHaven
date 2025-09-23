@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.Remoting.Messaging;
-using System.Text.RegularExpressions;
+﻿using System.Reflection;
 using BepInEx;
-using CommandExtension.Models;
 using HarmonyLib;
-using QFSW.QC;
 using QFSW.QC.Utilities;
 using UnityEngine;
-using Wish;
 
 namespace CommandExtension
 {
@@ -25,22 +15,51 @@ namespace CommandExtension
 
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public partial class CommandExtension : BaseUnityPlugin
-    {
-        public const string GREET = "> Command Extension Active!";
-        public const string GREET_INFO = "     type '!help' for a list of commands.";
-        public const string MESSAGE_GAP = "  -  ";
-        public const bool DEBUG = true;
-        public const bool DEBUG_LOG = DEBUG && true;
+	{
+		public const string GREET_MESSAGE = "> Command Extension Active!";
+        public const string GREET_INFO_MESSAGE = "     type '!help' for a list of commands.";
+		public const int PLAYER_INITIALIZATION_COUNT_WANTED = 2;  // the actual player spawned - used to greet player and setup commands
+		public const bool DEBUG = false;
+		public const bool DEBUG_LOG = DEBUG && false;
+		public const bool DEBUG_HELPER = DEBUG && true;
 
-        public static Color GreetColor = new Color(1F, 0.66F, 0.0F);
-        public static Color GreetInfoColor = new Color(0.7F, 0.44F, 0.0F);
-        public static Color RedColor = new Color(255, 0, 0);
-        public static Color GreenColor = new Color(0, 255, 0);
-        public static Color YellowColor = new Color(240, 240, 0);
+		public static string MessageSeparator { get; private set; } = "  -  ".ColorText(BlackColor);
+		public static Color NormalColor { get; private set; } = new(1F, 0.66F, 0.0F);
+		public static Color GreetColor { get; private set; } = new(1F, 0.66F, 0.0F);
+		public static Color GreetInfoColor { get; private set; } = new(0.7F, 0.44F, 0.0F);
+		public static Color RedColor { get; private set; } = new(255, 0, 0);
+		public static Color GreenColor { get; private set; } = new(0, 255, 0);
+		public static Color YellowColor { get; private set; } = new(240, 240, 0);
+		public static Color BlackColor { get; private set; } = Color.black;
+		public static Color DarkGrayColor { get; private set; } = new(0.2f, 0.2f, 0.2f); //new(0.1f, 0.1f, 0.1f)
 
-        private void Awake()
+
+		private void Awake()
         {
-            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
+			_ = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }
-    }
+
+		public static void GreetDebug()
+		{
+			CommandMethodes.MessageToChat(GREET_MESSAGE.ColorText(GreetColor));
+			CommandMethodes.MessageToChat("DEBUG".ColorText(Color.magenta)
+					+ (DEBUG_LOG ? " -DEBUG_LOG".ColorText(Color.magenta) : "")
+					+ (DEBUG_HELPER ? " -DEBUG_HELPER".ColorText(Color.magenta) : ""));
+
+			if (DEBUG_HELPER)
+			{
+				_ = CommandMethodes.CommandFunction_ManaInfinite(Commands.CmdKeyManaInfinite);
+				_ = CommandMethodes.CommandFunction_DashInfinite(Commands.CmdKeyDashInfinite);
+				_ = CommandMethodes.CommandFunction_JumpOver(Commands.CmdKeyJumpOver);
+				_ = CommandMethodes.CommandFunction_NoHit(Commands.CmdKeyNoHit);
+				_ = CommandMethodes.CommandFunction_Pause(Commands.CmdKeyPause);
+			}
+		}
+
+		public static void GreetNormal()
+		{
+			CommandMethodes.MessageToChat(GREET_MESSAGE.ColorText(GreetColor));
+			CommandMethodes.MessageToChat(GREET_INFO_MESSAGE.ColorText(GreetInfoColor));
+		}
+	}
 }

@@ -1,89 +1,164 @@
 ﻿# Sun Haven Mod Collection
-
-This repository contains mods for the game Sunhaven.
+This repository contains mods for the game **Sunhaven**.
 
 ## Containing Mods
-* **CommandExtension**: This mod adds a variety of new console commands.
-* **SmartMuseum**: This mod that adds a Quality of Life feature to the game by automatically filling the museum upon entry.
-* **ControllerBypass**: This mod disables direct controller inputs to be able to use any remapper for controller.
-* **YearCorrection [OBSOLETE]**: This mod corrects the year calculation, no permanent changes.
-* **Testing [DEV]**: This mod is just a testing environment.
+* **[Command Extension](#command-extension)**: This mod adds a variety of new console commands.
+* **[AutoFill Museum](#autofill-museum)**: This mod that adds a Quality of Life feature to the game by automatically filling the museum upon entry.
+* **[Controller Input Disabler](#controller-input-disabler)**: This mod disables direct controller inputs to be able to use any remapper for controller.
 
 ## Command Extension
-This mod is designed to enhance your gaming experience by allowing you to enter commands directly into the game’s chat box. It operates alongside the game’s existing command system, but with its own unique command prefix.  
+This mod is designed to enhance your gaming experience by allowing you to enter commands directly into the game’s chat box.  
+It operates alongside the game’s existing command system, but with its own unique command prefix.  
 
-**Here’s how to use it:**
+- **How to use Commands**:  
+  Commands are entered using the Chat-Box.
+  Open the Chat (Enter-key by default) and type e.g. `!help` for a list of Commands.
 
-* **Open the game’s chat box:**
-This is typically done by pressing a specific key or button in the game. The chat box is where you’ll be entering your commands.
-* **Enter your command:** Commands for the game itself start with a `/` prefix, while commands for the mod use a `!` prefix. For example, if you want to use a command from the mod, you would type something like `!pause`.
-* **Execute the command:** After typing your command into the chat box, simply press enter. If the text you entered is a recognized command, it will be executed. If it’s not a recognized command, it will be sent as a regular chat message.
+### Commands
+```
+ℹ️ Command Parameters with a star (*) are optional, e.g. [amount]*
+```
+- **Core Commands**
+	- `CmdPrefix`: `!`  
+	  The command prefix used for all commands.
+	
+	- `help`: `!help`  
+	  Displays a list of all available commands.
+	
+	- `state`: `!state`  
+	  Shows which commands are currently activated.
+	
+	- `feedback`: `!feedback`  
+	  Toggles chat feedback for command execution.
+	
+	- `name`: `!name [playerName]*`  
+	  Sets or resets the player name that commands will target.
 
-### COMMANDS:
-* General Commands
-  * `!help`: Get a list of all commands and their state.
-  * `!state`: Shows every command that's activated.
-  * `!feedback`: Toggle command feedback (chat prints). For example, "Rx4Byte got 2 Tickets!" gets not printed while off.
-  * `!name [playername]`: Change the command target player. Use `!name Rx4Byte` to target Rx4Byte, or `!name` to set to default (back to default).
+- **Player Commands**
+	- `jumper`: `!jumper`  
+	  Toggles ability to jump through objects.
+	
+	- `dasher`: `!dasher`  
+	  Toggles infinite dash charges.
+	
+	- `manafill`: `!manafill`  
+	  Refills the player’s mana to maximum.
+	
+	- `manainf`: `!manainf`  
+	  Toggles infinite mana.
+	
+	- `healthfill`: `!healthfill`  
+	  Refills the player’s health to maximum.
+	
+	- `nohit`: `!nohit`  
+	  Toggles invincibility (no damage taken).
+	
+	- `noclip`: `!noclip`  
+	  Toggles noclip mode (walk through walls).
+	
+	- `sleep`: `!sleep`  
+	  Sleeps through the night.
 
-* Time and Weather Commands
-  * `!pause`: Toggle to pause/resume time.
-  * `!timespeed [value]`: Adjust the speed of time. Use `!timespeed 60` for one hour per in-game day, `!timespeed reset` to reset to default, or `!timespeed` to toggle On/Off.
-  * `!time [hour/day] [value]`: Set the time. Use `!time day 14` to set to day 14, or `!time h 12` to set the hour to 12.
-  * `!weather [rain/heat/clear]`: Control the weather. Use `!weather r` to toggle raining or `h` for heatwave, or `!weather c` to toggle both off.
-  * `!season [seasonType]`: Change the season. Use `!season summer` to set the season to summer. Options include summer, winter, fall, spring.
-  * `!years [Amount]`: Add or subtract years. Use `!years 2023` to add 2023 years, add a '-' to subtract.
+- **Time Commands**
+	- `pause`: `!pause`  
+	  Toggles the game’s time pause on or off.
+	
+	- `timespeed`: `!timespeed [multiplier|reset]`  
+	  Sets or toggles a custom day-length multiplier.
+	
+	- `time`: `!time [h|d] [value]`  
+	  Sets the current hour or day in the day/night cycle.
+	
+	- `weather`: `!weather [raining|heatwave|clear]`  
+	  Changes weather to raining, heatwave, or clear.
+	
+	- `season`: `!season [Spring|Summer|Fall|Winter]`  
+	  Changes the current season.
+	
+	- `years`: `!years (-)[years]`  
+	  Advances or rewinds the in-game year by increments of four months.
 
-* NPC Commands
-  * `!relationship [NPCName] [value]`
-  * `!divorce [NPCName]`
-  * `!marry [NPCName]`
+- **Currency Commands**
+	- `money`: `!money (-)[amount]`  
+	  Alias for `!coins`.
+	
+	- `coins`: `!coins (-)[amount]`  
+	  Adds or subtracts Coins from the player.
+	
+	- `orbs`: `!orbs (-)[amount]`  
+	  Adds or subtracts Orbs from the player.
+	
+	- `tickets`: `!tickets (-)[amount]`  
+	  Adds or subtracts Tickets from the player.
+	
+	- `devkit`: `!devkit`  
+	  Grants the developer kit items.
 
-* Item Commands
-  * ~~`!give [ID/NAME] [Amount]`: Give items. Use `!give tickets 2` or `!give 18011 2`. It's also possible to give DLC pets/mounts like `!give wickedmountschest`.~~
-  * ~~`!items [any word]`: Prints all items containing the given word to the chat. For example, `!items chest`.~~
-  * ~~`!getitemids [xp/money/all/furniture/bonus/quest]`: Prints items to chat like this "FarmingEXP : 60004". Printing ALL items creates an item list as a text file inside the Sunhaven folder.~~
-  * ~~`!showid`: Show the item ID in tooltip.~~
+- **Mine Commands**
+	- `minereset`: `!minereset`  
+	  Reset the current mine.
+	
+	- `mineclear`: `!mineclear`  
+	  Removes all rocks and ores from the mine.
+	
+	- `mineoverfill`: `!mineoverfill`  
+	  Fills the mine completely with rocks and ores.
 
-* Currency Commands
-  * `!money [value]`: Adjust money. Use `!money 100` to add, or `!money -100` or `!money 100-` to subtract.
-  * `!coins [value]`: Adjust coins. Use `!coins 100` to add, or `!coins -100` or `!coins 100-` to subtract.
-  * `!orbs [value]`: Adjust orbs. Use `!orbs 100` to add, or `!orbs -100` or `!orbs 100-` to subtract.
-  * `!tickets [value]`: Adjust tickets. Use `!tickets 100` to add, or `!tickets -100` or `!tickets 100-` to subtract.
+- **Relationship Commands**
+	- `relationship`: `!relationship [name|all] [value] [add]*`  
+	  Sets or adds to NPC relationship values.
+	
+	- `marry`: `!marry [name|all]`  
+	  Marries a single or all NPCs.
+	
+	- `divorce`: `!divorce [name|all]`  
+	  Divorces a single or all NPCs.
 
-* Mine Commands
-  * `!minereset`: Reset minerals.
-  * `!mineoverfill`: Fully fill the mine.
-  * `!mineclear`: Fully clear the mine.
+- **Item Commands**
+	- `give`: `!give [ID|name] [amount]*`  
+	  Gives item(s) to the player by ID or name.
+	
+	- `list`: `!list [name]`  
+	  Lists items matching the given name.
+	
+	- `items`: `!items [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal] [get]* [amount]*`  
+	  Show or give items filtered by category.
+	
+	- `showid`: `!showid`  
+	  Toggles showing item IDs in tooltips.
+	
+	- `showidonhover`: `!showidonhover`  
+	  Show the item ID in chat when hovering.
 
-* Player Commands
-  * `!jumper`: Toggle the ability to jump over objects.
-  * `!dasher`: Dash without pause.
-  * `!noclip`: Walk through walls and objects.
-  * `!manafill`: Refill mana.
-  * `!manainf`: Infinite mana.
-  * `!healthfill`: Refill health.
-  * `!nohit`: Godmode, infinite health.
-  * `!sleep`: Sleep to the next day where you are (no end day screen).
-  * `!tp [location]`: Teleport to a location. For example, `!tp home`.
-  * `!tps`: Prints all teleport locations.
+- **Teleport Commands**
+	- `tp`: `!tp [location]`  
+	  Teleports the player to a location.
+	
+	- `tps`: `!tps`  
+	  Lists all available teleport destinations.
 
-* Misc Commands
-  * `!devkit`: Get all developer items.
-  * `!cheats`: Toggle cheat-keybinds.
-  * `!ui`: Toggle UI, hide or show the UI back.
-  * ~~`!autofillmuseum`: Toggle, automatically fill museum upon entry (need items in inventory).~~
-  * ~~`!cheatfillmuseum`: Toggle, automatically fill museum upon entry (no items needed, CHEATING).~~
-  * ~~`!exp [ExpType] [Amount]`: Add experience. Use `!exp farming 100`.~~
+- **Misc Commands**
+	- `ui`: `!ui [on|off]*`  
+	  Toggles the game’s HUD and UI elements.
+	
+	- `autofillmuseum`: `!autofillmuseum`  
+	  Toggles auto-fill of museum bundles on entry.
+	
+	- `cheatfillmuseum`: `!cheatfillmuseum`  
+	  Toggles cheat-fill of museum bundles on entry.
+	
+	- `yearfix`: `!yearfix`  
+	  Toggles corrected year calculation.
+	
+	- `cheats`: `!cheats`  
+	  Toggles the game’s built-in cheats and hotkeys.
 
-* Pet Commands
-  * ~~`!despawnpet`~~
-  * ~~`!pet [petname]`~~
-  * ~~`!pets`~~
-
-## SmartMuseum: A Standalone Museum-AutoFill Mod
-This standalone mod adds a Quality of Life feature to the game by automatically filling the museum upon entry. The QoL addition eliminates the need for manual placement of items in the museum.  
+## AutoFill Museum
+This standalone mod adds a Quality of Life feature to the game by automatically filling the museum upon entry.  
+The QoL addition eliminates the need for manual placement of items in the museum.  
 Simply **walk into the museum with the necessary items in your inventory**, and watch as it fills up!
 
-## ControllerBypass
-This mod disables direct controller inputs, allowing you to use any remapper for your controller. It provides you with the freedom to customize your controller settings as per your preferences. With this, you're no longer limited by the game's default controller settings.
+## Controller Input Disabler
+This mod disables direct controller inputs, allowing you to use any remapper for your controller.  
+It provides you with the freedom to customize your controller settings as per your preferences.  
+With this, you're no longer limited by the game's default controller settings.
