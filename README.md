@@ -27,12 +27,6 @@ It operates alongside the game’s existing command system, but with its own uni
 	
 	- `state`: `!state`  
 	  Shows which commands are currently activated.
-	
-	- `feedback`: `!feedback`  
-	  Toggles chat feedback for command execution.
-	
-	- `name`: `!name [playerName]*`  
-	  Sets or resets the player name that commands will target.
 
 - **Player Commands**
 	- `jumper`: `!jumper`  
@@ -76,7 +70,7 @@ It operates alongside the game’s existing command system, but with its own uni
 	  Changes the current season.
 	
 	- `years`: `!years (-)[years]`  
-	  Advances or rewinds the in-game year by increments of four months.
+	  Increase or Decrease the Year.
 
 - **Currency Commands**
 	- `money`: `!money (-)[amount]`  
@@ -124,8 +118,8 @@ It operates alongside the game’s existing command system, but with its own uni
 	- `items`: `!items [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal] [get]* [amount]*`  
 	  Show or give items filtered by category.
 	
-	- `showid`: `!showid`  
-	  Toggles showing item IDs in tooltips.
+	- ~~`showid`: `!showid`~~  
+	  ~~Toggles showing item IDs in tooltips.~~
 	
 	- `showidonhover`: `!showidonhover`  
 	  Show the item ID in chat when hovering.
