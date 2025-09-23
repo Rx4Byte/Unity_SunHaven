@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿# Sun Haven Mod Collection
 This repository contains mods for the game **Sunhaven**.
 
@@ -5,6 +6,18 @@ This repository contains mods for the game **Sunhaven**.
 * **[Command Extension](#command-extension)**: This mod adds a variety of new console commands.
 * **[AutoFill Museum](#autofill-museum)**: This mod that adds a Quality of Life feature to the game by automatically filling the museum upon entry.
 * **[Controller Input Disabler](#controller-input-disabler)**: This mod disables direct controller inputs to be able to use any remapper for controller.
+=======
+# Sun Haven Mod Collection
+
+This repository contains mods for the game Sunhaven.
+
+## Containing Mods
+* **CommandExtension**: This mod adds a variety of new console commands.
+* **AutoFillMuseum**: This mod that adds a Quality of Life feature to the game by automatically filling the museum upon entry.
+* **ControllerBypass**: This mod disables direct controller inputs to be able to use any remapper for controller.
+* **YearCorrection [OBSOLETE]**: This mod corrects the year calculation, no permanent changes.
+* **Testing [DEV]**: This mod is just a testing environment.
+>>>>>>> 1b75f7aa1ebcb80b11f0a842cfd8dcea40f29570
 
 ## Command Extension
 This mod is designed to enhance your gaming experience by allowing you to enter commands directly into the game’s chat box.  
