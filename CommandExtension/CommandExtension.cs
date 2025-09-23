@@ -27,7 +27,7 @@ namespace CommandExtension
     public partial class CommandExtension : BaseUnityPlugin
     {
         // debug var's
-        public const bool debug = false;
+        public const bool debug = true;
         public const bool debugLog = debug && true;
 
         private void Awake()

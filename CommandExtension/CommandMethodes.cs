@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,6 +11,7 @@ using System.Xml.Linq;
 using BepInEx;
 using CommandExtension.Models;
 using HarmonyLib;
+using PSS;
 using QFSW.QC;
 using QFSW.QC.Utilities;
 using UnityEngine;
@@ -21,31 +23,23 @@ namespace CommandExtension
 {
     public static class CommandMethodes
     {
+        private const string gap = "  -  ";
+
+
+        public static string playerNameForCommandsFirst;
+        public static string playerNameForCommands;
+        private static string lastScene;
+        private static Vector2 lastLocation;
+
         private static Color Red = new Color(255, 0, 0);
         private static Color Green = new Color(0, 255, 0);
         private static Color Yellow = new Color(240, 240, 0);
 
-        public static string playerNameForCommandsFirst;
-        public static string playerNameForCommands;
-        private static string gap = "  -  ";
-        private static string lastPetName = "";
-        private static string lastScene;
-        private static Vector2 lastLocation;
-
-
-        private static Dictionary<string, int> allIds = ItemDatabaseWrapper.ItemDatabase.ids;
-        private static Dictionary<string, int> moneyIds = new Dictionary<string, int>() { { "coins", 60000 }, { "orbs", 18010 }, { "tickets", 18011 } };
-        private static Dictionary<string, int> xpIds = new Dictionary<string, int>() { { "combatexp", 60003 }, { "farmingexp", 60004 }, { "miningexp", 60006 }, { "explorationexp", 60005 }, { "fishingexp", 60008 } };
+        private static Dictionary<string, int> itemIds = (Dictionary<string, int>)typeof(Database).GetField("ids", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Database.Instance);
+        private static Dictionary<string, int> currencyIds = new Dictionary<string, int>() { { "coins", 60000 }, { "orbs", 18010 }, { "tickets", 18011 } };
+        private static Dictionary<string, int> expIds = new Dictionary<string, int>() { { "combatexp", 60003 }, { "farmingexp", 60004 }, { "miningexp", 60006 }, { "explorationexp", 60005 }, { "fishingexp", 60008 } };
         private static Dictionary<string, int> bonusIds = new Dictionary<string, int>() { { "health", 60009 }, { "mana", 60007 } };
-        private static Dictionary<string, Pet> petList = null;
-        private static Dictionary<string, Dictionary<string, int>> categorizedItems = new Dictionary<string, Dictionary<string, int>>() {
-            { "Furniture Items", new Dictionary<string, int>() },
-            { "Craftable Items", new Dictionary<string, int>() },
-            { "Useable Items", new Dictionary<string, int>() },
-            { "Monster Items", new Dictionary<string, int>() },
-            { "Equipable Items", new Dictionary<string, int>() },
-            { "Quest Items", new Dictionary<string, int>() },
-            { "Other Items", new Dictionary<string, int>() }};
+        private static Dictionary<string, Dictionary<string, int>> categorizedItems = null;
         private static List<string> tpLocations = new List<string>() {
             "throneroom", "nelvari", "wishingwell", "altar", "hospital", "sunhaven", "sunhavenfarm/farm/home", "nelvarifarm", "nelvarimine", "nelvarihome",
             "withergatefarm", "castle", "withergatehome", "grandtree", "taxi", "dynus", "sewer", "nivara", "barracks", "elios", "dungeon", "store", "beach" };
@@ -57,14 +51,20 @@ namespace CommandExtension
         public static bool noclip = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdNoClip)].State == CommandState.Activated;
         public static bool infMana = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdManaInf)].State == CommandState.Activated;
         public static bool infAirSkips = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdDasher)].State == CommandState.Activated;
-        public static bool printOnHover = false;// Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrintHoverItem)].State == CommandState.Activated;
-        public static bool appendItemDescWithId = false;// Commands[Array.FindIndex(Commands, command => command.Name == ExtensionCommands.CmdAppendItemDescWithId)].State == ExtensionCommands.CommandState.Activated;
-        public static bool yearFix = false;// Commands[Array.FindIndex(Commands, command => command.Name == ExtensionCommands.CmdFixYear)].State == ExtensionCommands.CommandState.Activated;
+        public static bool printOnHover = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdPrintHoverItem)].State == CommandState.Activated;
+        public static bool appendItemDescWithId = false;// Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdAppendItemDescWithId)].State == CommandState.Activated;
+        //public static bool yearFix = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdFixYear)].State == CommandState.Activated;
         public static bool uiVisible = true;
 
         struct CommandDefaultValues
         {
             public const float timeMultiplier = 0.2F;
+        }
+
+        public static Dictionary<int, ItemSellInfo> allItemSellInfos = ItemInfoDatabase.Instance.allItemSellInfos;
+        public static bool CommandFunction_Debug(string[] mayCommandParam)
+        {
+            return true;
         }
 
         // HELP *
@@ -98,75 +98,150 @@ namespace CommandExtension
         // PRINT SPECIAL ITEMS
         public static bool CommandFunction_PrintItemIds(string[] mayCommandParam)
         {
-            //switch ((mayCommandParam.Length >= 2) ? mayCommandParam[1][0] : '-')
-            //{
-            //    case 'x':
-            //        CommandFunction_PrintToChat("[XP-ITEM-IDs]".ColorText(Color.black));
-            //        foreach (KeyValuePair<string, int> id in xpIds)
-            //            CommandFunction_PrintToChat($"{id.Key} : {id.Value}");
-            //        break;
-            //    case 'm':
-            //        CommandFunction_PrintToChat("[MONEY-ITEM-IDs]".ColorText(Color.black));
-            //        foreach (KeyValuePair<string, int> id in moneyIds)
-            //            CommandFunction_PrintToChat($"{id.Key} : {id.Value}");
-            //        break;
-            //    case 'a':
-            //        if (CategorizeItemList())
-            //        {
-            //            string file = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/")) + "\\itemIDs(CommandExtension).txt";
-            //            if (!File.Exists(file))
-            //            {
-            //                using (File.Create(file))
-            //                { }
-            //            }
-            //            bool isEmpty = true;
-            //            File.WriteAllText(file, "");
-            //            string overviewLine = new string('#', 80);
-            //            foreach (var category in categorizedItems)
-            //            {
-            //                if (category.Value.Count >= 1)
-            //                {
-            //                    if (isEmpty)
-            //                    {
-            //                        File.AppendAllText(file, $"[{category.Key}]\n");
-            //                        isEmpty = false;
-            //                    }
-            //                    else
-            //                        File.AppendAllText(file, $"\n\n\n{overviewLine}\n[{category.Key}]\n");
-            //                    foreach (var item in category.Value.OrderBy(i => i.Key))
-            //                    {
-            //                        File.AppendAllText(file, $"{item.Key} : {item.Value}\n");
-            //                    }
-            //                    File.AppendAllText(file, "");
-            //                }
-            //            }
-            //            CommandFunction_PrintToChat("ID list created inside your Sun Haven folder:".ColorText(Color.green));
-            //            CommandFunction_PrintToChat(file.ColorText(Color.white));
-            //        }
-            //        else
-            //            CommandFunction_PrintToChat("ERROR: ".ColorText(Red) + "ItemDatabaseWrapper.ItemDatabase.ids".ColorText(Color.white) + " is empty!".ColorText(Red));
-            //        break;
-            //    case 'b':
-            //        CommandFunction_PrintToChat("[BONUS-ITEM-IDs]".ColorText(Color.black));
-            //        foreach (KeyValuePair<string, int> id in bonusIds)
-            //            CommandFunction_PrintToChat($"{id.Key} : {id.Value}");
-            //        break;
-            //    case 'f':
-            //        CommandFunction_PrintToChat("[FURNITURE-ITEM-IDs]".ColorText(Color.black));
-            //        foreach (KeyValuePair<string, int> id in allIds)
-            //            if (ItemDatabaseWrapper.ItemDatabase.GetItemData(id.Value).category == ItemCategory.Furniture)
-            //                CommandFunction_PrintToChat($"{id.Key} : {id.Value}");
-            //        break;
-            //    case 'q':
-            //        CommandFunction_PrintToChat("[QUEST-ITEM-IDs]".ColorText(Color.black));
-            //        foreach (KeyValuePair<string, int> id in allIds)
-            //            if (ItemDatabaseWrapper.ItemDatabase.GetItemData(id.Value).category == ItemCategory.Quest)
-            //                CommandFunction_PrintToChat($"{id.Key} : {id.Value}");
-            //        break;
-            //    default:
-            //        CommandFunction_PrintToChat(Commands.CmdPrintItemIds + " [xp|money|all|bonus|furniture|quest]".ColorText(Red));
-            //        return true;
-            //}
+            if (categorizedItems == null)
+            {
+                if (!CategorizeItemList())
+                {
+                    MessageToChat($"Database Missing!".ColorText(Red));
+                    return true;
+                }
+            }
+
+            bool getItems = mayCommandParam.Length >= 3 && mayCommandParam[2] == "get";
+            int amount = (mayCommandParam.Length >= 4 && int.TryParse(mayCommandParam[2], out amount)) ? amount : 1;
+
+            switch ((mayCommandParam.Length >= 2) ? mayCommandParam[1] : "-")
+            {
+                case "xp":
+                    MessageToChat("[Exp Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in expIds)
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                case "money":
+                    MessageToChat("[Currency Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in currencyIds)
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                //case 'a':
+                //    if (CategorizeItemList())
+                //    {
+                //        string file = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/")) + "\\itemIDs(CommandExtension).txt";
+                //        if (!File.Exists(file))
+                //        {
+                //            using (File.Create(file))
+                //            { }
+                //        }
+                //        bool isEmpty = true;
+                //        File.WriteAllText(file, "");
+                //        string overviewLine = new string('#', 80);
+                //        foreach (var category in categorizedItems)
+                //        {
+                //            if (category.Value.Count >= 1)
+                //            {
+                //                if (isEmpty)
+                //                {
+                //                    File.AppendAllText(file, $"[{category.Key}]\n");
+                //                    isEmpty = false;
+                //                }
+                //                else
+                //                    File.AppendAllText(file, $"\n\n\n{overviewLine}\n[{category.Key}]\n");
+                //                foreach (var item in category.Value.OrderBy(i => i.Key))
+                //                {
+                //                    File.AppendAllText(file, $"{item.Key} : {item.Value}\n");
+                //                }
+                //                File.AppendAllText(file, "");
+                //            }
+                //        }
+                //        MessageToChat("ID list created inside your Sun Haven folder:".ColorText(Color.green));
+                //        MessageToChat(file.ColorText(Color.white));
+                //    }
+                //    else
+                //        CommandFunction_PrintToChat("ERROR: ".ColorText(Red) + "ItemDatabaseWrapper.ItemDatabase.ids".ColorText(Color.white) + " is empty!".ColorText(Red));
+                //    break;
+
+                case "bonus":
+                    MessageToChat("[Bonus Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in bonusIds)
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                case "decoration":
+                    MessageToChat("[Decoration Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in categorizedItems["Decoration"])
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                case "armor":
+                    MessageToChat("[Armor Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in categorizedItems["Armor"])
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                case "tool":
+                    MessageToChat("[Tool Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in categorizedItems["Tool"])
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                case "food":
+                    MessageToChat("[Food Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in categorizedItems["Food"])
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                case "crop":
+                    MessageToChat("[Crop Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in categorizedItems["Crop"])
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                case "fish":
+                    MessageToChat("[Fish Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in categorizedItems["Fish"])
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                case "pet":
+                    MessageToChat("[Pet Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in categorizedItems["Pet"])
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                case "normal":
+                    MessageToChat("[Normal Ids]".ColorText(Color.black));
+                    foreach (KeyValuePair<string, int> item in categorizedItems["Normal"])
+                    {
+                        GiveOrPrintItem(item.Value, amount, getItems);
+                    }
+                    break;
+
+                default:
+                    MessageToChat(Commands.CmdPrintItemIds + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]".ColorText(Red));
+                    return true;
+            }
+
             return true;
         }
 
@@ -360,54 +435,69 @@ namespace CommandExtension
             {
                 if (int.TryParse(mayCommandParam[1], out int itemId))
                 {
-                    if (allIds.Values.Contains(itemId))
+                    if (itemIds.Values.Contains(itemId))
                     {
                         int itemAmount = (mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1;
                         GetPlayerForCommand().Inventory.AddItem(itemId, itemAmount, 0, true, true);
-                        MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {itemAmount.ToString().ColorText(Color.white)} * {ItemDatabaseWrapper.ItemDatabase.GetItemData(itemId).name.ColorText(Color.white)}!".ColorText(Yellow));
+                        string itemName = "unknown";
+                        Database.GetData(itemId, delegate (ItemData data) 
+                        {
+                            itemName = data.Name;
+                        });
+                        MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {itemAmount.ToString().ColorText(Color.white)} x {itemName.ColorText(Color.white)}!".ColorText(Yellow));
                     }
                     else
+                    {
                         MessageToChat($"no item with id: {itemId.ToString().ColorText(Color.white)} found!".ColorText(Red));
+                    }
                 }
                 else
                 {
-                    //int itemsFound = 0;
-                    //int lastItemId = 0;
+                    int itemsFound = 0;
+                    int lastItemId = 0;
                     if (mayCommandParam.Length >= 2)
                     {
-                        /*  foreach (KeyValuePair<string, int> id in allIds)
-                          {
-                              if (id.Key.Contains(mayCommandParam[1].ToLower()))
-                              {
-                                  lastItemId = id.Value;
-                                  itemsFound++;
-                                  if (mayCommandParam[1] == id.Key)
-                                  {
-                                      int itemAmount = ((mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1);
-                                      GetPlayerForCommand().Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
-                                      return true;
-                                  }
-                              }
-                          }
-                          if (itemsFound == 1)
-                          {
-                              int itemAmount = ((mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1);
-                              GetPlayerForCommand().Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
-                          }
-                          else if (itemsFound > 1)
-                          {
-                              CommandFunction_PrintToChat("[FOUND ITEMS]".ColorText(Color.black) + "use a unique item-name or id".ColorText(Color.white));
-                              foreach (KeyValuePair<string, int> id in allIds)
-                              {
-                                  if (id.Key.Contains(mayCommandParam[1]))
-                                      CommandFunction_PrintToChat(id.Key + " : ".ColorText(Color.black) + id.Value.ToString());
-                              }
-                          }
-                          else
-                              CommandFunction_PrintToChat($"no item name contains {mayCommandParam[1].ColorText(Color.white)}!".ColorText(Red));*/
+                        foreach (KeyValuePair<string, int> id in itemIds)
+                        {
+                            if (id.Key.Contains(mayCommandParam[1].ToLower()))
+                            {
+                                lastItemId = id.Value;
+                                itemsFound++;
+                                if (mayCommandParam[1] == id.Key)
+                                {
+                                    int itemAmount = ((mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1);
+                                    GetPlayerForCommand().Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
+                                    return true;
+                                }
+                            }
+                        }
+
+                        if (itemsFound == 1)
+                        {
+                            int itemAmount = ((mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1);
+                            GetPlayerForCommand().Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
+                        }
+                        else if (itemsFound > 1)
+                        {
+                            MessageToChat("[Items Containing: ]".ColorText(new Color(0.1f, 0.1f, 0.1f)) + mayCommandParam[1].ColorText(new Color(0.26f, 0.26f, 0.26f)));
+                            MessageToChat("use a unique item-name or id".ColorText(Color.red));
+                            foreach (KeyValuePair<string, int> id in itemIds)
+                            {
+                                if (id.Key.Contains(mayCommandParam[1]))
+                                {
+                                    MessageToChat(id.Key + " : ".ColorText(Color.black) + id.Value.ToString());
+                                }
+                            }
+                        }
+                        else
+                        {
+                            MessageToChat($"no item name contains {mayCommandParam[1].ColorText(Color.white)}!".ColorText(Red));
+                        }
                     }
                     else
-                        MessageToChat($"invalid itemId!".ColorText(Red));
+                    {
+                        MessageToChat($"invalid Item ID!".ColorText(Red));
+                    }
                     return true;
                 }
             }
@@ -422,17 +512,21 @@ namespace CommandExtension
             if (mayCommandParam.Length >= 2)
             {
                 List<string> items = new List<string>();
-                // foreach (KeyValuePair<string, int> id in allIds)
-                //    {
-                //        if (id.Key.ToLower().Contains(mayCommandParam[1]))
-                //          items.Add(id.Key.ColorText(Color.white) + " : ".ColorText(Color.black) + id.Value.ToString().ColorText(Color.white));
-                //   }
-                //    if (items.Count >= 1)
-                //    {
-                //        CommandFunction_PrintToChat("[FOUND ITEMS]".ColorText(Color.black));
-                //    foreach (string ítem in items)
-                //        CommandFunction_PrintToChat(ítem);
-                // }
+                foreach (KeyValuePair<string, int> id in itemIds)
+                {
+                    if (id.Key.ToLower().Contains(mayCommandParam[1]))
+                    {
+                        items.Add(id.Key.ColorText(Color.white) + " : ".ColorText(Color.black) + id.Value.ToString().ColorText(Color.white));
+                    }
+                }
+                if (items.Count >= 1)
+                {
+                    MessageToChat($"[Items with: {mayCommandParam[1].ColorText(new Color(0.26f, 0.26f, 0.26f))}]".ColorText(new Color(0.1f, 0.1f, 0.1f)));
+                    foreach (string ítem in items)
+                    {
+                        MessageToChat(ítem);
+                    }
+                }
             }
             return true;
         }
@@ -459,10 +553,10 @@ namespace CommandExtension
         // SHOW ID
         public static bool CommandFunction_ShowID()
         {
-            //int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdAppendItemDescWithId);
-            //Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            //bool flag = appendItemDescWithId = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            //CommandFunction_PrintToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
+            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdAppendItemDescWithId);
+            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
+            bool flag = appendItemDescWithId = Commands.GeneratedCommands[i].State == CommandState.Activated;
+            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
             return true;
         }
 
@@ -505,11 +599,11 @@ namespace CommandExtension
         // PRINT ID ON HOVER
         public static bool CommandFunction_PrintItemIdOnHover()
         {
-            //int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdPrintHoverItem);
-            //Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            //bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            //printOnHover = flag;
-            //CommandFunction_PrintToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
+            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdPrintHoverItem);
+            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
+            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
+            printOnHover = flag;
+            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
             return true;
         }
 
@@ -561,14 +655,6 @@ namespace CommandExtension
             bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
             MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
             return true;
-        }
-
-        private static void GameObjectSetActiveState(GameObject obj, bool state)
-        {
-            if (obj != null)
-            {
-                obj.SetActive(state);
-            }
         }
 
         // UI ON/OFF
@@ -732,20 +818,20 @@ namespace CommandExtension
         // AUTO-FILL MUSEUM
         public static bool CommandFunction_AutoFillMuseum()
         {
-            //int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdAutoFillMuseum);
-            //Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            //bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            //CommandFunction_PrintToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
+            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdAutoFillMuseum);
+            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
+            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
+            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
             return true;
         }
 
         // CHEAT-FILL MUSEUM
         public static bool CommandFunction_CheatFillMuseum()
         {
-            //int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdCheatFillMuseum);
-            //Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            //bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            //CommandFunction_PrintToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
+            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdCheatFillMuseum);
+            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
+            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
+            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
             return true;
         }
 
@@ -904,80 +990,12 @@ namespace CommandExtension
         // GET TELEPORT LOCATIONS
         public static bool CommandFunction_TeleportLocations()
         {
+            MessageToChat("[Locations]".ColorText(Color.black));
             foreach (string tpLocation in tpLocations)
+            {
                 MessageToChat(tpLocation.ColorText(Color.white));
-            return true;
-        }
-
-        // DESPAWN PET
-        public static bool CommandFunction_DespawnPet()
-        {
-            if (lastPetName == "")
-                MessageToChat("No pet spawned by command".ColorText(Red));
-            else
-            {
-                PetManager.Instance.DespawnPet(Player.Instance);
-                MessageToChat($"Pet ({lastPetName.ColorText(Color.white)}) removed!".ColorText(Green));
-                lastPetName = "";
             }
-            return true;
-        }
 
-        // SPAWN PET
-        public static bool CommandFunction_SpawnPet(string[] mayCmdParam)
-        {
-            if (petList == null)
-                petList = (Dictionary<string, Pet>)typeof(PetManager).GetField("_petDictionary", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(PetManager.Instance);
-            if (petList != null)
-            {
-                if (mayCmdParam.Length >= 2)
-                {
-                    string petCmd = mayCmdParam[1];
-                    List<string> despawnCmds = new List<string> { "despawn", "remove" };
-                    foreach (string cmd in despawnCmds)
-                    {
-                        if (petCmd.Contains(cmd))
-                        {
-                            if (lastPetName != "")
-                            {
-                                PetManager.Instance.DespawnPet(Player.Instance);
-                                MessageToChat($"Pet ({lastPetName.ColorText(Color.white)}) removed!".ColorText(Green));
-                                lastPetName = "";
-                            }
-                            else
-                                MessageToChat("No pet spawned by command".ColorText(Red));
-                            return true;
-                        }
-                    }
-                    if (petList.ContainsKey(petCmd))
-                    {
-                        PetManager.Instance.SpawnPet(petCmd, Player.Instance, null);
-                        lastPetName = petCmd;
-                    }
-                    else
-                        MessageToChat($"wrong pet name, get pets using '{"!pets".ColorText(Color.white)}'".ColorText(Red));
-                }
-                else
-                    MessageToChat($"try '{"!pet [pet name]".ColorText(Color.white)}'!".ColorText(Red));
-            }
-            else
-                MessageToChat("ISSUE: no 'petList', u can report this bug".ColorText(Red));
-            return true;
-        }
-
-        // GET PET LIST
-        public static bool CommandFunction_GetPetList()
-        {
-            if (petList == null)
-            {
-                petList = (Dictionary<string, Pet>)typeof(PetManager).GetField("_petDictionary", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(PetManager.Instance);
-                if (petList == null)
-                    MessageToChat("ISSUE: no 'petList', u can report this bug".ColorText(Red));
-                return true;
-            }
-            MessageToChat("[PET-LIST]".ColorText(Color.black));
-            foreach (string pet in petList.Keys)
-                MessageToChat(pet);
             return true;
         }
 
@@ -1147,7 +1165,7 @@ namespace CommandExtension
         }
 
         // CHANGE YEAR
-        public static bool CommandFunction_IncDecYear(string mayCommand)
+        public static bool CommandFunction_Year(string mayCommand)
         {
             if (!int.TryParse(Regex.Match(mayCommand, @"\d+").Value, out int value))
             {
@@ -1192,6 +1210,18 @@ namespace CommandExtension
         // Utility
         // ============================================================
 
+        private static void GiveOrPrintItem(int id, int amount, bool give = false)
+        {
+            //Commands.CmdPrintItemIds + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]"
+            if (give)
+            {
+                GetPlayerForCommand().Inventory.AddItem(id, amount, 0, true, true);
+            }
+            else
+            {
+                MessageToChat($"{amount} : {id}");
+            }
+        }
         public static void MessageToChat(string text)
         {
             if (Commands.GeneratedCommands.First(command => command.Name == Commands.CmdPrefix + Commands.CmdFeedbackDisabled).State == CommandState.Deactivated)
@@ -1207,6 +1237,11 @@ namespace CommandExtension
                 return input;
             }
             return input.First().ToString().ToUpper() + input.Substring(1);
+        }
+
+        private static void GameObjectSetActiveState(GameObject obj, bool state)
+        {
+            obj?.SetActive(state);
         }
 
         private static void Marry(NPCAI npcai, bool unmarry = false, bool notify = false)
@@ -1265,25 +1300,60 @@ namespace CommandExtension
         // Categorize all items
         private static bool CategorizeItemList()
         {
-            if (ItemDatabaseWrapper.ItemDatabase.ids == null || ItemDatabaseWrapper.ItemDatabase.ids.Count < 1)
-                return false;
-            foreach (var item in allIds)
+            if (itemIds == null || itemIds.Count < 1)
             {
-                if (ItemDatabaseWrapper.ItemDatabase.GetItemData(item.Value).category == ItemCategory.Furniture)
-                    categorizedItems["Furniture Items"].Add(item.Key, item.Value);
-                else if (ItemDatabaseWrapper.ItemDatabase.GetItemData(item.Value).category == ItemCategory.Equip)
-                    categorizedItems["Equipable Items"].Add(item.Key, item.Value);
-                else if (ItemDatabaseWrapper.ItemDatabase.GetItemData(item.Value).category == ItemCategory.Quest)
-                    categorizedItems["Quest Items"].Add(item.Key, item.Value);
-                else if (ItemDatabaseWrapper.ItemDatabase.GetItemData(item.Value).category == ItemCategory.Craftable)
-                    categorizedItems["Craftable Items"].Add(item.Key, item.Value);
-                else if (ItemDatabaseWrapper.ItemDatabase.GetItemData(item.Value).category == ItemCategory.Monster)
-                    categorizedItems["Monster Items"].Add(item.Key, item.Value);
-                else if (ItemDatabaseWrapper.ItemDatabase.GetItemData(item.Value).category == ItemCategory.Use)
-                    categorizedItems["Useable Items"].Add(item.Key, item.Value);
-                else
-                    categorizedItems["Other Items"].Add(item.Key, item.Value);
+                return false;
             }
+
+            categorizedItems = new Dictionary<string, Dictionary<string, int>>() {
+                { "Decoration", new Dictionary<string, int>() },
+                { "Normal", new Dictionary<string, int>() },
+                { "Armor", new Dictionary<string, int>() },
+                { "Tool", new Dictionary<string, int>() },
+                { "Food", new Dictionary<string, int>() },
+                { "Crop", new Dictionary<string, int>() },
+                { "Fish", new Dictionary<string, int>() },
+                { "Pet", new Dictionary<string, int>() }};
+
+            foreach (var item in itemIds)
+            {
+                if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(item.Value, out ItemSellInfo itemInfo))
+                {
+                    if (itemInfo.decorationType != DecorationType.None)
+                    {
+                        categorizedItems["Decoration"].Add(item.Key, item.Value);
+                    }
+                    else if (itemInfo.itemType == ItemType.Armor)
+                    {
+                        categorizedItems["Armor"].Add(item.Key, item.Value);
+                    }
+                    else if (itemInfo.itemType == ItemType.Tool || itemInfo.itemType == ItemType.WateringCan)
+                    {
+                        categorizedItems["Tool"].Add(item.Key, item.Value);
+                    }
+                    else if (itemInfo.itemType == ItemType.Food)
+                    {
+                        categorizedItems["Food"].Add(item.Key, item.Value);
+                    }
+                    else if (itemInfo.itemType == ItemType.Crop)
+                    {
+                        categorizedItems["Crop"].Add(item.Key, item.Value);
+                    }
+                    else if (itemInfo.itemType == ItemType.Fish)
+                    {
+                        categorizedItems["Fish"].Add(item.Key, item.Value);
+                    }
+                    else if (itemInfo.itemType == ItemType.Pet)
+                    {
+                        categorizedItems["Pet"].Add(item.Key, item.Value);
+                    }
+                    else
+                    {
+                        categorizedItems["Normal"].Add(item.Key, item.Value);
+                    }
+                }
+            }
+
             return true;
         }
     }
@@ -1293,259 +1363,174 @@ namespace CommandExtension
     {
         [Command(Commands.CmdHelp, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm0()
-        {
-        }
+        private static void fm0() { }
 
         [Command(Commands.CmdState, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm1()
-        {
-        }
+        private static void fm1() { }
 
-        //[Command(Commands.CmdPrintItemIds, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("None")]
-        //private static void fm2(string xp_money_bonus_furniture_quest_all)
-        //{
-        //}
+        [Command(Commands.CmdPrintItemIds, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+        [CommandDescription("None")]
+        private static void fm2(string xp_currency_bonus_Pet_decoration_armor_tool_food_crop_fish_normal) { }
 
         [Command(Commands.CmdMineReset, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm3()
-        {
-        }
+        private static void fm3() { }
 
         [Command(Commands.CmdMineClear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm4()
-        {
-        }
+        private static void fm4() { }
 
         [Command(Commands.CmdMineOverfill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm5()
-        {
-        }
+        private static void fm5() { }
 
         [Command(Commands.CmdCoins, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm6(string amount)
-        {
-        }
+        private static void fm6(string amount) { }
 
         [Command(Commands.CmdOrbs, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm7(string amount)
-        {
-        }
+        private static void fm7(string amount) { }
 
         [Command(Commands.CmdTickets, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm8(string amount)
-        {
-        }
+        private static void fm8(string amount) { }
+
         [Command(Commands.CmdName, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm9(string playerName)
-        {
-        }
+        private static void fm9(string playerName) { }
 
         [Command(Commands.CmdSetDate, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        public static void fm10(string DayOrHoure_and_Value)
-        {
-        }
+        public static void fm10(string DayOrHoure_and_Value) { }
 
         [Command(Commands.CmdWeather, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        public static void fm11(string raining_or_heatwave_or_clear)
-        {
-        }
+        public static void fm11(string raining_or_heatwave_or_clear) { }
 
-        //[Command(Commands.CmdGive, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("None")]
-        //private static void fm12(string itemName)
-        //{
-        //}
+        [Command(Commands.CmdGive, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+        [CommandDescription("None")]
+        private static void fm12(string itemName) { }
 
-        //[Command(Commands.CmdShowItems, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("None")]
-        //private static void fm13(string itemName_ToShowItemsWithGivenName)
-        //{
-        //}
+        [Command(Commands.CmdShowItems, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+        [CommandDescription("None")]
+        private static void fm13(string itemName_ToShowItemsWithGivenName) { }
 
         [Command(Commands.CmdDevKit, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm14()
-        {
-        }
+        private static void fm14() { }
 
         [Command(Commands.CmdDasher, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm15()
-        {
-        }
+        private static void fm15() { }
 
         //[Command(Commands.CmdAppendItemDescWithId, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         //[CommandDescription("None")]
-        //private static void fm16(string INFO_ShowsItemIdsInDescription)
-        //{
-        //}
+        //private static void fm16(string INFO_ShowsItemIdsInDescription) { }
 
         [Command(Commands.CmdManaFill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm17()
-        {
-        }
+        private static void fm17() { }
 
         [Command(Commands.CmdManaInf, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm18()
-        {
-        }
+        private static void fm18() { }
 
         [Command(Commands.CmdHealthFill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm19()
-        {
-        }
+        private static void fm19() { }
 
         [Command(Commands.CmdSleep, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm20()
-        {
-        }
+        private static void fm20() { }
 
-        //[Command(Commands.CmdPrintHoverItem, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("None")]
-        //private static void fm21(string INFO_sendItemIdAndNameToChat)
-        //{
-        //}
+        [Command(Commands.CmdPrintHoverItem, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+        [CommandDescription("None")]
+        private static void fm21(string INFO_sendItemIdAndNameToChat) { }
 
         [Command(Commands.CmdFeedbackDisabled, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm22()
-        {
-        }
+        private static void fm22() { }
 
         [Command(Commands.CmdPause, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("None")]
-        private static void fm23()
-        {
-        }
+        private static void fm23() { }
 
         [Command(Commands.CmdCustomDaySpeed, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("Set custom time speed")]
-        private static void fm24(string Value_or_Nothing_to_reset)
-        {
-        }
+        private static void fm24(string Value_or_Nothing_to_reset) { }
 
         [Command(Commands.CmdUI, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("Toggle UI on/off")]
-        private static void fm25(string On_or_Off)
-        {
-        }
+        private static void fm25(string On_or_Off) { }
 
         [Command(Commands.CmdJumper, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("Jump over objects")]
-        private static void fm26()
-        {
-        }
+        private static void fm26() { }
 
         [Command(Commands.CmdNoClip, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("Walk through walls")]
-        private static void fm27()
-        {
-        }
+        private static void fm27() { }
 
         [Command(Commands.CmdNoHit, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("Not hitable mode")]
-        private static void fm28()
-        {
-        }
+        private static void fm28() { }
 
-        //[Command(Commands.CmdAutoFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("Fill Museum apon entry with items from inventory")]
-        //private static void fm29(string INFO_autofillMusuemOnEnterMuseum)
-        //{
-        //}
-
-        //[Command(Commands.CmdCheatFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("Fill Museum apon entry without loosing items")]
-        //private static void fm30(string INFO_cheatfillMusuemOnEnterMuseum)
-        //{
-        //}
+        [Command(Commands.CmdAutoFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+        [CommandDescription("Fill Museum apon entry with items from inventory")]
+        private static void fm29(string INFO_autofillMusuemOnEnterMuseum) { }
+       
+        [Command(Commands.CmdCheatFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+        [CommandDescription("Fill Museum apon entry without loosing items")]
+        private static void fm30(string INFO_cheatfillMusuemOnEnterMuseum) { }
 
         [Command(Commands.CmdTeleport, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("teleport to location")]
-        private static void fm31(string location)
-        {
-        }
+        private static void fm31(string location) { }
 
         [Command(Commands.CmdTeleportLocations, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("List teleport locations")]
-        private static void fm32()
-        {
-        }
+        private static void fm32() { }
 
         //[Command(Commands.CmdDespawnPet, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         //[CommandDescription("despawn pet")]
-        //private static void fm33(string Pet_Name)
-        //{
-        //}
+        //private static void fm33(string Pet_Name) { }
 
         //[Command(Commands.CmdSpawnPet, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         //[CommandDescription("spawn pet")]
-        //private static void fm34(string Pet_Name)
-        //{
-        //}
+        //private static void fm34(string Pet_Name) { }
 
         //[Command(Commands.CmdPetList, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         //[CommandDescription("List all pets")]
-        //private static void fm35(string Pet_Name)
-        //{
-        //}
+        //private static void fm35(string Pet_Name) { }
 
         [Command(Commands.CmdUnMarry, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("Divorce/Unmarry")]
-        private static void fm36(string NPC_Name)
-        {
-        }
+        private static void fm36(string NPC_Name) { }
 
         [Command(Commands.CmdRelationship, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("set NPC Relationship level (1-20?)")]
-        private static void fm37(string NPC_Name_and_value)
-        {
-        }
+        private static void fm37(string NPC_Name_and_value) { }
 
         [Command(Commands.CmdMarryNpc, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("set Marry NPC's")]
-        private static void fm38(string NPC_Name)
-        {
-        }
+        private static void fm38(string NPC_Name) { }
 
         [Command(Commands.CmdSetSeason, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("set the season (Spring, Summer, Fall, Winter)")]
-        private static void fm39(string season)
-        {
-        }
+        private static void fm39(string season) { }
 
         //[Command(Commands.CmdFixYear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         //[CommandDescription("Fix the year calculation")]
-        //private static void fm40(string value)
-        //{
-        //}
+        //private static void fm40(string value) { }
 
         [Command(Commands.CmdIncDecYear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("Increase/Decrase the current year")]
-        private static void fm41(string amount)
-        {
-        }
+        private static void fm41(string amount) { }
 
         [Command(Commands.CmdCheats, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         [CommandDescription("Toggle SunHaven cheats enabled")]
-        private static void fm42()
-        {
-        }
+        private static void fm42() { }
     }
 }

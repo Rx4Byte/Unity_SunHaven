@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CommandExtension.Models;
 using HarmonyLib;
+using PSS;
 using QFSW.QC;
 using QFSW.QC.Utilities;
 using UnityEngine;
@@ -149,20 +150,19 @@ namespace CommandExtension
 
         // Pre-patch to override the buggy Year calculation.
         // Applies a custom formula: (DayCycle.Day - 1) / 112 + 1.
-        [HarmonyPatch(typeof(DayCycle))]
-        [HarmonyPatch("Year", MethodType.Getter)]
-        class Patch_DayCycleYear
-        {
-            public static bool Prefix(ref int __result)
-            {
-                __result = (DayCycle.Day - 1) / 112 + 1;
-                return !CommandMethodes.yearFix;
-            }
-        }
+        //[HarmonyPatch(typeof(DayCycle))]
+        //[HarmonyPatch("Year", MethodType.Getter)]
+        //class Patch_DayCycleYear
+        //{
+        //    public static bool Prefix(ref int __result)
+        //    {
+        //        __result = (DayCycle.Day - 1) / 112 + 1;
+        //        return !CommandMethodes.yearFix;
+        //    }
+        //}
 
         // Pre-patch Player.AirSkipsUsed setter.
         // When infinite air skips are enabled, this prefix prevents the game from reducing the count.
-
         [HarmonyPatch(typeof(Player), nameof(Player.AirSkipsUsed), MethodType.Setter)]
         class Patch_PlayerAirSkipsUsed
         {
@@ -277,260 +277,211 @@ namespace CommandExtension
 
         // Pre-patch to inject item IDs into tooltips and optionally print them on hover.
         // Applies to GetToolTip(Tooltip, int, bool) across multiple item types.
-        //[HarmonyPatch]
-        //class Patch_ItemGetToolTip
-        //{
-        //    /// <summary>
-        //    /// Targets GetToolTip methods on all relevant item classes.
-        //    /// </summary>
-        //    static IEnumerable<MethodBase> TargetMethods()
-        //    {
-        //        Type[] itemTypes = new Type[] { typeof(NormalItem), typeof(ArmorItem), typeof(FoodItem), typeof(FishItem), typeof(CropItem), typeof(WateringCanItem), typeof(AnimalItem), typeof(PetItem), typeof(ToolItem) };
-        //        foreach (Type itemType in itemTypes)
-        //            yield return AccessTools.Method(itemType, "GetToolTip", new[] { typeof(Tooltip), typeof(int), typeof(bool) });
-        //    }
-        //
-        //    /// <summary>
-        //    /// Prefix runs before each GetToolTip call.
-        //    /// - If printOnHover is enabled, sends the item ID and name to chat.
-        //    /// - Prepends or removes a colored ID label in the in-game tooltip description
-        //    ///   based on appendItemDescWithId.
-        //    /// </summary>
-        //    /// <param name="__instance">The item instance whose tooltip is being generated.</param>
-        //    static void Prefix(Item __instance)
-        //    {
-        //        // Fetch the item ID and its data record
-        //        int id = __instance.ID();
-        //        // TODO: update
-        //        ItemData itemData = ItemDatabaseWrapper.ItemDatabase.GetItemData(id);
-        //
-        //        // Print the ID and name in chat when hovering, if enabled
-        //        if (CommandMethodes.printOnHover)
-        //        {
-        //            CommandMethodes.MessageToChat($"{id} : {itemData.name}");
-        //        }
-        //
-        //        string idLabel = "ID: ".ColorText(Color.magenta) + id.ToString().ColorText(Color.magenta) + "\"\n\"";
-        //
-        //        if (CommandMethodes.appendItemDescWithId)
-        //        {
-        //            // Add the label if it’s not already present
-        //            if (!itemData.description.Contains(idLabel))
-        //            {
-        //                itemData.description = idLabel + itemData.description;
-        //            }
-        //        }
-        //        // Remove the label if it exists when feature is off
-        //        if (itemData.description.Contains(idLabel))
-        //        {
-        //            itemData.description = itemData.description.Replace(idLabel, "");
-        //        }
-        //
-        //    }
-        //}
+        [HarmonyPatch]
+        class Patch_ItemGetToolTip
+        {
+            /// <summary>
+            /// Targets GetToolTip methods on all relevant item classes.
+            /// </summary>
+            static IEnumerable<MethodBase> TargetMethods()
+            {
+                Type[] itemTypes = new Type[] { typeof(NormalItem), typeof(ArmorItem), typeof(FoodItem), typeof(FishItem), typeof(CropItem), typeof(WateringCanItem), typeof(AnimalItem), typeof(PetItem), typeof(ToolItem) };
+                foreach (Type itemType in itemTypes)
+                    yield return AccessTools.Method(itemType, "GetToolTip", new[] { typeof(Tooltip), typeof(int), typeof(bool) });
+            }
+        
+            /// <summary>
+            /// Prefix runs before each GetToolTip call.
+            /// - If printOnHover is enabled, sends the item ID and name to chat.
+            /// - Prepends or removes a colored ID label in the in-game tooltip description
+            ///   based on appendItemDescWithId.
+            /// </summary>
+            /// <param name="__instance">The item instance whose tooltip is being generated.</param>
+            static void Prefix(Item __instance)
+            {
+                // Fetch the item ID and its data recordDatabase.GetData(itemId, delegate (ItemData data) 
+                Database.GetData(__instance.ID(), delegate (ItemData data)
+                {
+                    // Print the ID and name in chat when hovering, if enabled
+                    if (CommandMethodes.printOnHover)
+                    {
+                        CommandMethodes.MessageToChat($"{data.id} : {data.name}");
+                    }
+
+                    //string idLabel = "ID: ".ColorText(Color.magenta) + data.id.ToString().ColorText(Color.magenta) + "\"\n\"";
+                    //
+                    //if (CommandMethodes.appendItemDescWithId)
+                    //{
+                    //    CommandMethodes.MessageToChat("here");
+                    //    // Add the label if it’s not already present
+                    //    if (!data.description.Contains(idLabel))
+                    //    {
+                    //        data.description = idLabel + data.description;
+                    //        CommandMethodes.MessageToChat("done");
+                    //    }
+                    //}
+                    // Remove the label if it exists when feature is off
+                    //else if (data.description.Contains(idLabel))
+                    //{
+                    //    data.description = data.description.Replace(idLabel, "");
+                    //}
+                });
+            }
+        }
 
         // Pre-patch to display the raw item ID as the formatted description when in debug mode.
-        //[HarmonyPatch(typeof(ItemData))]
-        //[HarmonyPatch("FormattedDescription", MethodType.Getter)]
-        //class Patch_ItemDataFormattedDescription
-        //{
-        //    /// <summary>
-        //    /// Postfix runs after ItemData.FormattedDescription getter.
-        //    /// When debug is enabled, replaces the description with the item’s ID in magenta.
-        //    /// </summary>
-        //    /// <param name="__result">
-        //    /// The string result returned by the original getter.
-        //    /// </param>
-        //    /// <param name="__instance">
-        //    /// The ItemData instance whose description is being fetched.
-        //    /// </param>
-        //    static void Postfix(ref string __result, ItemData __instance)
-        //    {
-        //        if (CommandExtension.debug)
-        //        {
-        //            __result = __instance.id.ToString().ColorText(Color.magenta) + "\"\n\"";
-        //        }
-        //    }
-        //}
+        /*
+        [HarmonyPatch(typeof(ItemData))]
+        [HarmonyPatch("FormattedDescription", MethodType.Getter)]
+        class Patch_ItemDataFormattedDescription
+        {
+            /// <summary>
+            /// Postfix runs after ItemData.FormattedDescription getter.
+            /// When debug is enabled, replaces the description with the item’s ID in magenta.
+            /// </summary>
+            /// <param name="__result">
+            /// The string result returned by the original getter.
+            /// </param>
+            /// <param name="__instance">
+            /// The ItemData instance whose description is being fetched.
+            /// </param>
+            static void Postfix(ref string __result, ItemData __instance)
+            {
+                if (CommandExtension.debug)
+                {
+                    __result = __instance.id.ToString().ColorText(Color.magenta) + "\"\n\"";
+                }
+            }
+        }
+        */
 
         // Post-patch to auto-fill museum bundles when the appropriate fill commands are active.
-        //[HarmonyPatch(typeof(HungryMonster))]
-        //[HarmonyPatch("SetMeta")]
-        //class Patch_HungryMonsterSetMeta
-        //{
-        //    /// <summary>
-        //    /// Postfix runs after HungryMonster.SetMeta executes.
-        //    /// If this bundle is a museum bundle and either the cheat-fill or auto-fill command is activated,
-        //    /// it will top up the bundle slots, either directly (cheat mode) or by transferring items
-        //    /// from the player’s inventory (auto-fill mode), then refresh all museum visuals.
-        //    /// </summary>
-        //    /// <param name="__instance">The HungryMonster instance being configured.</param>
-        //    /// <param name="decorationData">DecorationPositionData passed into SetMeta (unused).</param>
-        //    static void Postfix(HungryMonster __instance, DecorationPositionData decorationData)
-        //    {
-        //        // Only proceed for actual museum bundles
-        //        if (__instance.bundleType != BundleType.MuseumBundle)
-        //        {
-        //            return;
-        //        }
-        //
-        //        // Determine if either fill command is active
-        //        bool cheatFill = Commands.GeneratedCommands.Any(cmd => cmd.Name == Commands.CmdPrefix + Commands.CmdCheatFillMuseum && cmd.State == CommandState.Activated);
-        //        bool autoFill = Commands.GeneratedCommands.Any(cmd => cmd.Name == Commands.CmdPrefix + Commands.CmdAutoFillMuseum && cmd.State == CommandState.Activated);
-        //        if (!cheatFill && !autoFill)
-        //            return;
-        //
-        //        // Ensure a valid player context for auto-fill
-        //        Player player = CommandMethodes.GetPlayerForCommand();
-        //        if (player == null)
-        //            return;
-        //
-        //        var monster = __instance;
-        //        var inventory = monster.sellingInventory;
-        //        if (inventory == null)
-        //            return;
-        //
-        //        // Cheat-fill: force all slots to max regardless of player inventory
-        //        if (cheatFill)
-        //        {
-        //            foreach (var slot in inventory.Items)
-        //            {
-        //                if (slot.item == null ||
-        //                    slot.slot.numberOfItemToAccept == 0 ||
-        //                    slot.amount >= slot.slot.numberOfItemToAccept)
-        //                    continue;
-        //
-        //                bool isMoneyBundle = monster.name.ToLower().Contains("money");
-        //                int needed = slot.slot.numberOfItemToAccept - slot.amount;
-        //
-        //                if (isMoneyBundle
-        //                    && slot.slot.itemToAccept.id >= 60000 && slot.slot.itemToAccept.id <= 60002)
-        //                {
-        //                    inventory.AddItem(item: slot.slot.itemToAccept.id,
-        //                        amount: needed,
-        //                        slot: slot.slotNumber,
-        //                        sendNotification: false,
-        //                        specialItem: false);
-        //                }
-        //                else if (!isMoneyBundle)
-        //                {
-        //                    var itemObj = ItemDatabaseWrapper.ItemDatabase.GetItemData(slot.slot.itemToAccept.id).GetItem();
-        //                    inventory.AddItem(itemObj, needed, slot.slotNumber, false);
-        //                }
-        //
-        //                monster.UpdateFullness();
-        //            }
-        //        }
-        //        // Auto-fill: move matching items from the player’s inventory
-        //        else
-        //        {
-        //            var playerInv = player.Inventory;
-        //            if (playerInv == null)
-        //                return;
-        //
-        //            foreach (var slot in inventory.Items)
-        //            {
-        //                if (slot.slot.numberOfItemToAccept == 0 || slot.amount >= slot.slot.numberOfItemToAccept)
-        //                    continue;
-        //
-        //                if (monster.name.ToLower().Contains("money"))
-        //                    continue; // skip money bundles here
-        //
-        //                foreach (var pItem in playerInv.Items)
-        //                {
-        //                    if (pItem.id != slot.slot.itemToAccept.id)
-        //                        continue;
-        //
-        //                    int transfer = Math.Min(pItem.amount, slot.slot.numberOfItemToAccept - slot.amount
-        //                    );
-        //                    if (transfer <= 0)
-        //                        continue;
-        //
-        //                    var itemObj = ItemDatabaseWrapper.ItemDatabase.GetItemData(pItem.id).GetItem();
-        //                    inventory.AddItem(item: itemObj,
-        //                        amount: transfer,
-        //                        slot: slot.slotNumber,
-        //                        sendNotification: false);
-        //
-        //                    CommandMethodes.CommandFunction_PrintToChat($"transferred: {transfer.ToString().ColorText(Color.white)} * "
-        //                        + $"{ItemDatabaseWrapper.ItemDatabase.GetItemData(pItem.id).name.ColorText(Color.white)}"
-        //                    );
-        //                    playerInv.RemoveItem(pItem.item, transfer);
-        //                    monster.UpdateFullness();
-        //                }
-        //            }
-        //        }
-        //
-        //        // Refresh all museum bundle visuals so changes appear immediately
-        //        //Array.ForEach(FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));
-        //        foreach (var visual in UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>())
-        //        {
-        //            typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(visual, null);
-        //        }
-        //
-        //
-        //        //if (Commands[Array.FindIndex(Commands, command => command.Name == ExtensionCommands.CmdCheatFillMuseum)].State == ExtensionCommands.CommandState.Activated
-        //        //    ||
-        //        //    Commands[Array.FindIndex(Commands, command => command.Name == ExtensionCommands.CmdAutoFillMuseum)].State == ExtensionCommands.CommandState.Activated)
-        //        //{
-        //        //    Player player = GetPlayerForCommand();
-        //        //    if (player == null)
-        //        //        return;
-        //        //    HungryMonster monster = __instance;
-        //        //    if (monster.sellingInventory != null) // && monster.sellingInventory.Items != null && monster.sellingInventory.Items.Count >= 1
-        //        //    {
-        //        //        if (Commands.Any(command => command.Name == ExtensionCommands.CmdCheatFillMuseum && command.State == ExtensionCommands.CommandState.Activated))
-        //        //        {
-        //        //            foreach (SlotItemData slotItemData in monster.sellingInventory.Items)
-        //        //            {
-        //        //                if (slotItemData.item == null || slotItemData.slot.numberOfItemToAccept == 0 || slotItemData.amount == slotItemData.slot.numberOfItemToAccept)
-        //        //                    continue;
-        //        //                if (!monster.name.ToLower().Contains("money"))
-        //        //                    monster.sellingInventory.AddItem(ItemDatabaseWrapper.ItemDatabase.GetItemData(slotItemData.slot.itemToAccept.id).GetItem(), slotItemData.slot.numberOfItemToAccept - slotItemData.amount, slotItemData.slotNumber, false);
-        //        //                else if (monster.name.ToLower().Contains("money"))
-        //        //                {
-        //        //                    if (slotItemData.slot.itemToAccept.id >= 60000 && slotItemData.slot.itemToAccept.id <= 60002)
-        //        //                        monster.sellingInventory.AddItem(slotItemData.slot.itemToAccept.id, slotItemData.slot.numberOfItemToAccept - slotItemData.amount, slotItemData.slotNumber, false, false);
-        //        //                    //if (slotItemData.slot.itemToAccept.id == 60000)
-        //        //                    //    monster.sellingInventory.AddItem(slotItemData.slot.itemToAccept.id, slotItemData.slot.numberOfItemToAccept - slotItemData.amount, slotItemData.slotNumber, false, false);
-        //        //                    //else if (slotItemData.slot.itemToAccept.id == 60001)
-        //        //                    //    monster.sellingInventory.AddItem(slotItemData.slot.itemToAccept.id, slotItemData.slot.numberOfItemToAccept - slotItemData.amount, slotItemData.slotNumber, false, false);
-        //        //                    //else if (slotItemData.slot.itemToAccept.id == 60002)
-        //        //                    //    monster.sellingInventory.AddItem(slotItemData.slot.itemToAccept.id, slotItemData.slot.numberOfItemToAccept - slotItemData.amount, slotItemData.slotNumber, false, false);
-        //        //                }
-        //        //                monster.UpdateFullness();
-        //        //            }
-        //        //        }
-        //        //        else
-        //        //        {
-        //        //            foreach (SlotItemData slotItemData in monster.sellingInventory.Items)
-        //        //            {
-        //        //                if (!monster.name.ToLower().Contains("money") && slotItemData.item != null && player.Inventory != null)
-        //        //                {
-        //        //                    if (slotItemData.slot.numberOfItemToAccept == 0 || slotItemData.amount == slotItemData.slot.numberOfItemToAccept)
-        //        //                        continue;
-        //        //                    Inventory pInventory = player.Inventory;
-        //        //                    foreach (var pItem in pInventory.Items)
-        //        //                    {
-        //        //                        if (pItem.id == slotItemData.slot.itemToAccept.id)
-        //        //                        {
-        //        //                            int amount = Math.Min(pItem.amount, slotItemData.slot.numberOfItemToAccept - slotItemData.amount);
-        //        //                            monster.sellingInventory.AddItem(ItemDatabaseWrapper.ItemDatabase.GetItemData(slotItemData.slot.itemToAccept.id).GetItem(), amount, slotItemData.slotNumber, false);
-        //        //                            CommandFunction_PrintToChat($"transferred: {amount.ToString().ColorText(Color.white)} * {ItemDatabaseWrapper.ItemDatabase.GetItemData(pItem.id).name.ColorText(Color.white)}");
-        //        //                            player.Inventory.RemoveItem(pItem.item, amount);
-        //        //                            monster.UpdateFullness();
-        //        //                        }
-        //        //                    }
-        //        //
-        //        //                }
-        //        //            }
-        //        //        }
-        //        //
-        //        //    }
-        //        //    Array.ForEach(FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));
-        //        //}
-        //    }
-        //}
+        [HarmonyPatch(typeof(HungryMonster))]
+        [HarmonyPatch("SetMeta")]
+        class Patch_HungryMonsterSetMeta
+        {
+            /// <summary>
+            /// Postfix runs after HungryMonster.SetMeta executes.
+            /// If this bundle is a museum bundle and either the cheat-fill or auto-fill command is activated,
+            /// it will top up the bundle slots, either directly (cheat mode) or by transferring items
+            /// from the player’s inventory (auto-fill mode), then refresh all museum visuals.
+            /// </summary>
+            /// <param name="__instance">The HungryMonster instance being configured.</param>
+            /// <param name="decorationData">DecorationPositionData passed into SetMeta (unused).</param>
+            static void Postfix(HungryMonster __instance, DecorationPositionData decorationData)
+            {
+                // Only proceed for actual museum bundles
+                if (__instance.bundleType != BundleType.MuseumBundle)
+                {
+                    return;
+                }
+        
+                // Determine if either fill command is active
+                bool cheatFill = Commands.GeneratedCommands.Any(cmd => cmd.Name == Commands.CmdPrefix + Commands.CmdCheatFillMuseum && cmd.State == CommandState.Activated);
+                bool autoFill = Commands.GeneratedCommands.Any(cmd => cmd.Name == Commands.CmdPrefix + Commands.CmdAutoFillMuseum && cmd.State == CommandState.Activated);
+                if (!cheatFill && !autoFill)
+                {
+                    return;
+                }
+
+                // Ensure a valid player context for auto-fill
+                Player player = CommandMethodes.GetPlayerForCommand();
+                if (player.Inventory == null || player.Inventory.Items == null)
+                {
+                    return;
+                }
+                Inventory playerInventory = player.Inventory;
+
+
+                HungryMonster monster = __instance;
+                if (monster.sellingInventory == null || monster.sellingInventory.Items == null)
+                {
+                    return;
+                }
+                Inventory monsterInventory = monster.sellingInventory;
+
+                // Cheat-fill: force all slots to max regardless of player inventory
+                if (cheatFill)
+                {
+                    foreach (SlotItemData slot in monsterInventory.Items)
+                    {
+                        if (slot.slot.numberOfItemToAccept == 0 || slot.amount >= slot.slot.numberOfItemToAccept)
+                        {
+                            continue;
+                        }
+
+                        bool isMoneyBundle = monster.name.ToLower().Contains("money");
+                        int needed = slot.slot.numberOfItemToAccept - slot.amount;
+
+                        if (isMoneyBundle && slot.slot.itemToAccept.id >= 60000 && slot.slot.itemToAccept.id <= 60002)
+                        {
+                            monsterInventory.AddItem(item: slot.slot.itemToAccept.id,
+                                amount: needed,
+                                slot: slot.slotNumber,
+                                sendNotification: false,
+                                specialItem: false);
+                        }
+                        else if (!isMoneyBundle)
+                        {
+                            monsterInventory.AddItem(slot.slot.serializedItemToAccept.id, needed, slot.slotNumber, false);
+                        }
+                        monster.SaveMeta();
+                        monster.SendNewMeta(monster.meta);
+                        monster.UpdateFullness(true);
+                    }
+
+                }
+                // Auto-fill: move matching items from the player’s inventory
+                else
+                {
+                    foreach (SlotItemData moonsterItem in monsterInventory.Items)
+                    {
+                        if (moonsterItem.slot.numberOfItemToAccept == 0 || moonsterItem.amount >= moonsterItem.slot.numberOfItemToAccept)
+                        {
+                            continue;
+                        }
+
+
+                        if (monster.name.ToLower().Contains("money"))
+                        {
+                            continue;
+                        }
+
+                        foreach (var playerItem in playerInventory.Items)
+                        {
+                            if (playerItem.id != moonsterItem.slot.serializedItemToAccept.id)
+                            {
+                                continue;
+                            }
+
+                            int amount = Math.Min(playerItem.amount, moonsterItem.slot.numberOfItemToAccept - moonsterItem.amount);
+
+                            monsterInventory.AddItem(item: playerItem.id,
+                                amount: amount,
+                                slot: moonsterItem.slotNumber,
+                                sendNotification: false);
+
+                            string itemName = "unkown";
+                            if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(playerItem.id, out ItemSellInfo itemSellInfo))
+                            {
+                                itemName = itemSellInfo.name;
+                            }
+                            
+                            CommandMethodes.MessageToChat($"added: {amount.ToString().ColorText(Color.white)} * "
+                                + $"{itemName.ColorText(Color.green)}"
+                                + " to the museum!");
+                            playerInventory.RemoveItem(playerItem.item, amount);
+
+                            monster.SaveMeta();
+                            monster.SendNewMeta(monster.meta);
+                            monster.UpdateFullness(true);
+                        }
+                    }
+                }
+
+                Array.ForEach(UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));
+            }
+        }
 
 
         // ============================================================

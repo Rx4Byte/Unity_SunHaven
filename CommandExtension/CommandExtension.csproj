@@ -78,7 +78,7 @@
     <Compile Include="CommandExtension.cs" />
     <Compile Include="CommandMethodes.cs" />
     <Compile Include="Commands.cs" />
-    <Compile Include="ItemDatabaseWrapper.cs" />
+    <Compile Include="ItemDatabase.cs" />
     <Compile Include="Models\Command.cs" />
     <Compile Include="Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
