@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -15,94 +16,141 @@ using PSS;
 using QFSW.QC;
 using QFSW.QC.Utilities;
 using UnityEngine;
+using UnityEngine.Device;
 using Wish;
-using static Unity.IO.LowLevel.Unsafe.AsyncReadManagerMetrics;
-using static UnityEngine.Random;
 
 namespace CommandExtension
 {
     public static class CommandMethodes
     {
-        private const string gap = "  -  ";
-
-
-        public static string playerNameForCommandsFirst;
-        public static string playerNameForCommands;
-        private static string lastScene;
-        private static Vector2 lastLocation;
-
-        private static Color Red = new Color(255, 0, 0);
-        private static Color Green = new Color(0, 255, 0);
-        private static Color Yellow = new Color(240, 240, 0);
-
         private static Dictionary<string, int> itemIds = (Dictionary<string, int>)typeof(Database).GetField("ids", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Database.Instance);
-        private static Dictionary<string, int> currencyIds = new Dictionary<string, int>() { { "coins", 60000 }, { "orbs", 18010 }, { "tickets", 18011 } };
-        private static Dictionary<string, int> expIds = new Dictionary<string, int>() { { "combatexp", 60003 }, { "farmingexp", 60004 }, { "miningexp", 60006 }, { "explorationexp", 60005 }, { "fishingexp", 60008 } };
-        private static Dictionary<string, int> bonusIds = new Dictionary<string, int>() { { "health", 60009 }, { "mana", 60007 } };
-        private static Dictionary<string, Dictionary<string, int>> categorizedItems = null;
+        private static Dictionary<string, Dictionary<string, int>> categorizedItems = new Dictionary<string, Dictionary<string, int>>() {
+            { 
+                "currency",
+                new Dictionary<string, int>() {
+                    { "coins", 60000 }, { "orbs", 18010 }, { "tickets", 18011 }}
+            },
+            { 
+                "exp",
+                new Dictionary<string, int>() {
+                    { "combatexp", 60003 }, { "farmingexp", 60004 }, { "miningexp", 60006 }, { "explorationexp", 60005 }, { "fishingexp", 60008 }}
+            },
+            { 
+                "bonus",
+                new Dictionary<string, int>() {
+                    { "health", 60009 }, { "mana", 60007 }}
+            },
+            { "decoration", new Dictionary<string, int>() },
+            { "normal", new Dictionary<string, int>() },
+            { "armor", new Dictionary<string, int>() },
+            { "tool", new Dictionary<string, int>() },
+            { "food", new Dictionary<string, int>() },
+            { "crop", new Dictionary<string, int>() },
+            { "fish", new Dictionary<string, int>() },
+            { "pet", new Dictionary<string, int>() }};
         private static List<string> tpLocations = new List<string>() {
             "throneroom", "nelvari", "wishingwell", "altar", "hospital", "sunhaven", "sunhavenfarm/farm/home", "nelvarifarm", "nelvarimine", "nelvarihome",
             "withergatefarm", "castle", "withergatehome", "grandtree", "taxi", "dynus", "sewer", "nivara", "barracks", "elios", "dungeon", "store", "beach" };
 
-        // Command states
+        public static string playerNameForCommandsFirst;
+        public static string playerNameForCommands;
         public static float timeMultiplier = CommandDefaultValues.timeMultiplier;
-        public static bool jumpOver = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdJumper)].State == CommandState.Activated;
-        public static bool cheatsOff = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdCheats)].State == CommandState.Activated;
-        public static bool noclip = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdNoClip)].State == CommandState.Activated;
-        public static bool infMana = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdManaInf)].State == CommandState.Activated;
-        public static bool infAirSkips = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdDasher)].State == CommandState.Activated;
-        public static bool printOnHover = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdPrintHoverItem)].State == CommandState.Activated;
-        public static bool appendItemDescWithId = false;// Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdAppendItemDescWithId)].State == CommandState.Activated;
-        //public static bool yearFix = Commands.GeneratedCommands[Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdFixYear)].State == CommandState.Activated;
         public static bool uiVisible = true;
+        private static string lastScene;
+        private static Vector2 lastLocation;
 
         struct CommandDefaultValues
         {
             public const float timeMultiplier = 0.2F;
         }
 
-        public static Dictionary<int, ItemSellInfo> allItemSellInfos = ItemInfoDatabase.Instance.allItemSellInfos;
-        public static bool CommandFunction_Debug(string[] mayCommandParam)
+        public static bool CommandFunction_Debug(string commandInput)
         {
+            string[] mayCommandParam = commandInput.Split(' ');
             return true;
         }
 
-        // HELP *
-        public static bool CommandFunction_Help(bool status = false)
+        // Help *
+        public static bool CommandFunction_Help(string commandInput)
         {
-            if (!status)
+            string[] mayCommandParam = commandInput.Split(' ');
+
+            if (mayCommandParam.Length >= 2)
             {
-                MessageToChat("[HELP]".ColorText(Color.black));
-                foreach (Command command in Commands.GeneratedCommands)
+                MessageToChat($"[{mayCommandParam[1]} - Command]".ColorText(Color.black));
+                foreach (Command command in Commands.GeneratedCommands.Values)
                 {
                     if (command.State == CommandState.Activated)
-                        MessageToChat($"{command.Name.ColorText(Green)}{gap.ColorText(Color.black)}{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
-                    if (command.State == CommandState.Deactivated)
-                        MessageToChat($"{command.Name.ColorText(Red)}{gap.ColorText(Color.black)}{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+                    {
+                        MessageToChat($"{command.Key.ColorText(CommandExtension.GreenColor)}\n{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+                    }
+                    else if (command.State == CommandState.Deactivated)
+                    {
+                        MessageToChat($"{command.Key.ColorText(CommandExtension.RedColor)}\n{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+                    }
                     if (command.State == CommandState.None)
-                        MessageToChat($"{command.Name.ColorText(Yellow)}{gap.ColorText(Color.black)}{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+                    {
+                        MessageToChat($"{command.Key.ColorText(CommandExtension.YellowColor)}\n{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+                    }
+
+                    MessageToChat($"{command.Usage.ColorText(CommandExtension.YellowColor)}");
                 }
             }
             else
             {
-                MessageToChat("[STATE]".ColorText(Color.black));
-                foreach (Command command in Commands.GeneratedCommands)
+                MessageToChat("[List of Commands]".ColorText(Color.black));
+                foreach (Command command in Commands.GeneratedCommands.Values)
                 {
                     if (command.State == CommandState.Activated)
-                        MessageToChat($"{command.Name.ColorText(Yellow)}{gap.ColorText(Color.black)}{(command.State.ToString().ColorText(Green))}");
+                        MessageToChat($"{command.Key.ColorText(CommandExtension.GreenColor)}{CommandExtension.MESSAGE_GAP.ColorText(Color.black)}{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+                    if (command.State == CommandState.Deactivated)
+                        MessageToChat($"{command.Key.ColorText(CommandExtension.RedColor)}{CommandExtension.MESSAGE_GAP.ColorText(Color.black)}{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+                    if (command.State == CommandState.None)
+                        MessageToChat($"{command.Key.ColorText(CommandExtension.YellowColor)}{CommandExtension.MESSAGE_GAP.ColorText(Color.black)}{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
                 }
+            }
+
+            return true;
+        }
+
+        // State *
+        public static bool CommandFunction_State(string commandInput)
+        {
+            List<string> activeToggleMessages = new List<string>();
+            foreach (Command command in Commands.GeneratedCommands.Values)
+            {
+                if (command.State == CommandState.Activated)
+                {
+                    activeToggleMessages.Add($"{command.Key.ColorText(CommandExtension.YellowColor)}{CommandExtension.MESSAGE_GAP.ColorText(Color.black)}{(command.State.ToString().ColorText(CommandExtension.GreenColor))}");
+                }
+            }
+
+            if (activeToggleMessages.Count >= 1)
+            {
+                MessageToChat("[States]".ColorText(Color.black));
+
+                foreach (string message in activeToggleMessages)
+                {
+                    MessageToChat(message);
+                }
+            }
+            else
+            {
+                MessageToChat("No active commands".ColorText(CommandExtension.YellowColor));
             }
             return true;
         }
 
         // PRINT SPECIAL ITEMS
-        public static bool CommandFunction_PrintItemIds(string[] mayCommandParam)
+        public static bool CommandFunction_PrintItemIds(string commandInput)
         {
+            string[] mayCommandParam = commandInput.Split(' ');
+
             if (categorizedItems == null)
             {
                 if (!CategorizeItemList())
                 {
-                    MessageToChat($"Database Missing!".ColorText(Red));
+                    MessageToChat($"Database Missing!".ColorText(CommandExtension.RedColor));
                     return true;
                 }
             }
@@ -114,131 +162,134 @@ namespace CommandExtension
             {
                 case "xp":
                     MessageToChat("[Exp Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in expIds)
+                    foreach (KeyValuePair<string, int> item in categorizedItems["exp"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
-                case "money":
+                case "currency":
                     MessageToChat("[Currency Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in currencyIds)
+                    foreach (KeyValuePair<string, int> item in categorizedItems["currency"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
-                //case 'a':
-                //    if (CategorizeItemList())
-                //    {
-                //        string file = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/")) + "\\itemIDs(CommandExtension).txt";
-                //        if (!File.Exists(file))
-                //        {
-                //            using (File.Create(file))
-                //            { }
-                //        }
-                //        bool isEmpty = true;
-                //        File.WriteAllText(file, "");
-                //        string overviewLine = new string('#', 80);
-                //        foreach (var category in categorizedItems)
-                //        {
-                //            if (category.Value.Count >= 1)
-                //            {
-                //                if (isEmpty)
-                //                {
-                //                    File.AppendAllText(file, $"[{category.Key}]\n");
-                //                    isEmpty = false;
-                //                }
-                //                else
-                //                    File.AppendAllText(file, $"\n\n\n{overviewLine}\n[{category.Key}]\n");
-                //                foreach (var item in category.Value.OrderBy(i => i.Key))
-                //                {
-                //                    File.AppendAllText(file, $"{item.Key} : {item.Value}\n");
-                //                }
-                //                File.AppendAllText(file, "");
-                //            }
-                //        }
-                //        MessageToChat("ID list created inside your Sun Haven folder:".ColorText(Color.green));
-                //        MessageToChat(file.ColorText(Color.white));
-                //    }
-                //    else
-                //        CommandFunction_PrintToChat("ERROR: ".ColorText(Red) + "ItemDatabaseWrapper.ItemDatabase.ids".ColorText(Color.white) + " is empty!".ColorText(Red));
-                //    break;
+                /*
+                case 'a':
+                    if (CategorizeItemList())
+                    {
+                        string file = Application.dataPath.Substring(0, Application.dataPath.LastIndexOf("/")) + "\\itemIDs(CommandExtension).txt";
+                        if (!File.Exists(file))
+                        {
+                            using (File.Create(file))
+                            { }
+                        }
+                        bool isEmpty = true;
+                        File.WriteAllText(file, "");
+                        string overviewLine = new string('#', 80);
+                        foreach (var category in categorizedItems)
+                        {
+                            if (category.Value.Count >= 1)
+                            {
+                                if (isEmpty)
+                                {
+                                    File.AppendAllText(file, $"[{category.Key}]\n");
+                                    isEmpty = false;
+                                }
+                                else
+                                    File.AppendAllText(file, $"\n\n\n{overviewLine}\n[{category.Key}]\n");
+                                foreach (var item in category.Value.OrderBy(i => i.Key))
+                                {
+                                    File.AppendAllText(file, $"{item.Key} : {item.Value}\n");
+                                }
+                                File.AppendAllText(file, "");
+                            }
+                        }
+                        MessageToChat("ID list created inside your Sun Haven folder:".ColorText(Color.CommandExtension.GreenColor));
+                        MessageToChat(file.ColorText(Color.white));
+                    }
+                    else
+                        CommandFunction_PrintToChat("ERROR: ".ColorText(CommandExtension.RedColor) + "ItemDatabaseWrapper.ItemDatabase.ids".ColorText(Color.white) + " is empty!".ColorText(CommandExtension.RedColor));
+                    break;
+                */
 
                 case "bonus":
                     MessageToChat("[Bonus Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in bonusIds)
+                    foreach (KeyValuePair<string, int> item in categorizedItems["bonus"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
                 case "decoration":
                     MessageToChat("[Decoration Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in categorizedItems["Decoration"])
+                    foreach (KeyValuePair<string, int> item in categorizedItems["decoration"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
                 case "armor":
                     MessageToChat("[Armor Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in categorizedItems["Armor"])
+                    foreach (KeyValuePair<string, int> item in categorizedItems["armor"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
                 case "tool":
                     MessageToChat("[Tool Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in categorizedItems["Tool"])
+                    foreach (KeyValuePair<string, int> item in categorizedItems["tool"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
                 case "food":
                     MessageToChat("[Food Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in categorizedItems["Food"])
+                    foreach (KeyValuePair<string, int> item in categorizedItems["food"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
                 case "crop":
                     MessageToChat("[Crop Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in categorizedItems["Crop"])
+                    foreach (KeyValuePair<string, int> item in categorizedItems["crop"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
                 case "fish":
                     MessageToChat("[Fish Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in categorizedItems["Fish"])
+                    foreach (KeyValuePair<string, int> item in categorizedItems["fish"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
                 case "pet":
                     MessageToChat("[Pet Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in categorizedItems["Pet"])
+                    foreach (KeyValuePair<string, int> item in categorizedItems["pet"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
                 case "normal":
                     MessageToChat("[Normal Ids]".ColorText(Color.black));
-                    foreach (KeyValuePair<string, int> item in categorizedItems["Normal"])
+                    foreach (KeyValuePair<string, int> item in categorizedItems["normal"])
                     {
-                        GiveOrPrintItem(item.Value, amount, getItems);
+                        MuseumGiveOrPrintItem(item.Value, amount, getItems);
                     }
                     break;
 
                 default:
-                    MessageToChat(Commands.CmdPrintItemIds + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]".ColorText(Red));
+                    MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
+                    //MessageToChat(Commands.CmdKeyPrintItemIds + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]".ColorText(CommandExtension.RedColor));
                     return true;
             }
 
@@ -246,135 +297,156 @@ namespace CommandExtension
         }
 
         // RESET MINES
-        public static bool CommandFunction_ResetMines()
+        public static bool CommandFunction_ResetMines(string commandInput)
         {
+            string[] mayCommandParam = commandInput.Split(' ');
+
             if (UnityEngine.Object.FindObjectOfType<MineGenerator2>() != null)
             {
                 typeof(MineGenerator2).GetMethod("ResetMines", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MineGenerator2.Instance, new object[] { (ushort)0 });
-                MessageToChat($"Mine {"Reseted".ColorText(Green)}!".ColorText(Yellow));
+                MessageToChat($"Mine {"Reseted".ColorText(CommandExtension.GreenColor)}!".ColorText(CommandExtension.YellowColor));
             }
             else
-                MessageToChat(("Must be inside a Mine!").ColorText(Red));
+            {
+                MessageToChat(("Must be inside a Mine!").ColorText(CommandExtension.RedColor));
+            }
             return true;
         }
 
         // CLEAR MINES
-        public static bool CommandFunction_ClearMines()
+        public static bool CommandFunction_ClearMines(string commandInput)
         {
+            string[] mayCommandParam = commandInput.Split(' ');
+
             if (UnityEngine.Object.FindObjectOfType<MineGenerator2>() != null)
             {
                 typeof(MineGenerator2).GetMethod("ClearMine", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MineGenerator2.Instance, null);
-                MessageToChat($"Mine {"Cleared".ColorText(Green)}!".ColorText(Yellow));
+                MessageToChat($"Mine {"CleaCommandExtension.RedColor".ColorText(CommandExtension.GreenColor)}!".ColorText(CommandExtension.YellowColor));
             }
             else
-                MessageToChat(("Must be inside a Mine!").ColorText(Red));
+            {
+                MessageToChat(("Must be inside a Mine!").ColorText(CommandExtension.RedColor));
+            }
             return true;
         }
 
         // OVERFILL MINES
-        public static bool CommandFunction_OverfillMines()
+        public static bool CommandFunction_OverfillMines(string commandInput)
         {
+            string[] mayCommandParam = commandInput.Split(' ');
+
             if (UnityEngine.Object.FindObjectOfType<MineGenerator2>() != null)
             {
                 for (int i = 0; i < 30; i++)
                 {
                     typeof(MineGenerator2).GetMethod("GenerateRocks", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(MineGenerator2.Instance, null);
                 }
-                MessageToChat($"Mine {"Overfilled".ColorText(Green)}!".ColorText(Yellow));
+
+                MessageToChat($"Mine {"Overfilled".ColorText(CommandExtension.GreenColor)}!".ColorText(CommandExtension.YellowColor));
             }
             else
-                MessageToChat(("Must be inside a Mine!").ColorText(Red));
+            {
+                MessageToChat(("Must be inside a Mine!").ColorText(CommandExtension.RedColor));
+            }
             return true;
         }
 
         // ADD MONEY/COINS
-        public static bool CommandFunction_AddMoney(string mayCommand)
+        public static bool CommandFunction_AddMoney(string commandInput)
         {
-            if (!int.TryParse(Regex.Match(mayCommand, @"\d+").Value, out int moneyAmount))
+            string[] mayCommandParam = commandInput.Split(' ');
+
+            if (!int.TryParse(Regex.Match(commandInput, @"\d+").Value, out int moneyAmount))
             {
-                MessageToChat("Something wen't wrong..".ColorText(Red));
-                MessageToChat("Try '!money 500' or '!coins 500'".ColorText(Red));
+                MessageToChat("Something wen't wrong..".ColorText(CommandExtension.RedColor));
+                MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
                 return true;
             }
-            if (mayCommand.Contains("-"))
+            if (commandInput.Contains("-"))
             {
-                GetPlayerForCommand().AddMoney(-moneyAmount, true, true, true);
-                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} paid {moneyAmount.ToString().ColorText(Color.white)} Coins!".ColorText(Yellow));
+                Player.Instance.AddMoney(-moneyAmount, true, true, true);
+                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} paid {moneyAmount.ToString().ColorText(Color.white)} Coins!".ColorText(CommandExtension.YellowColor));
             }
             else
             {
-                GetPlayerForCommand().AddMoney(moneyAmount, true, true, true);
-                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {moneyAmount.ToString().ColorText(Color.white)} Coins!".ColorText(Yellow));
+                Player.Instance.AddMoney(moneyAmount, true, true, true);
+                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {moneyAmount.ToString().ColorText(Color.white)} Coins!".ColorText(CommandExtension.YellowColor));
             }
             return true;
         }
 
         // ADD MONEY
-        public static bool CommandFunction_AddOrbs(string mayCommand)
+        public static bool CommandFunction_AddOrbs(string commandInput)
         {
-            if (!int.TryParse(Regex.Match(mayCommand, @"\d+").Value, out int moneyAmount))
+            string[] mayCommandParam = commandInput.Split(' ');
+
+            if (!int.TryParse(Regex.Match(commandInput, @"\d+").Value, out int moneyAmount))
             {
-                MessageToChat("Something wen't wrong..".ColorText(Red));
-                MessageToChat("Try '!orbs 500'".ColorText(Red));
+                MessageToChat("Something wen't wrong..".ColorText(CommandExtension.RedColor));
+                MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
                 return true;
             }
-            if (mayCommand.Contains("-"))
+            if (commandInput.Contains("-"))
             {
-                GetPlayerForCommand().AddOrbs(-moneyAmount);
-                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} paid {moneyAmount.ToString().ColorText(Color.white)} Orbs!".ColorText(Yellow));
+                Player.Instance.AddOrbs(-moneyAmount);
+                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} paid {moneyAmount.ToString().ColorText(Color.white)} Orbs!".ColorText(CommandExtension.YellowColor));
             }
             else
             {
-                GetPlayerForCommand().AddOrbs(moneyAmount);
-                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {moneyAmount.ToString().ColorText(Color.white)} Orbs!".ColorText(Yellow));
+                Player.Instance.AddOrbs(moneyAmount);
+                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {moneyAmount.ToString().ColorText(Color.white)} Orbs!".ColorText(CommandExtension.YellowColor));
             }
             return true;
         }
 
         // ADD MONEY
-        public static bool CommandFunction_AddTickets(string mayCommand)
+        public static bool CommandFunction_AddTickets(string commandInput)
         {
-            if (!int.TryParse(Regex.Match(mayCommand, @"\d+").Value, out int moneyAmount))
+            string[] mayCommandParam = commandInput.Split(' ');
+
+            if (!int.TryParse(Regex.Match(commandInput, @"\d+").Value, out int moneyAmount))
             {
-                MessageToChat("Something wen't wrong..".ColorText(Red));
-                MessageToChat("Try '!tickets 500'".ColorText(Red));
+                MessageToChat("Something wen't wrong..".ColorText(CommandExtension.RedColor));
+                MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
                 return true;
             }
-            if (mayCommand.Contains("-"))
+            if (commandInput.Contains("-"))
             {
-                GetPlayerForCommand().AddTickets(-moneyAmount);
-                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} paid {moneyAmount.ToString().ColorText(Color.white)} Tickets!".ColorText(Yellow));
+                Player.Instance.AddTickets(-moneyAmount);
+                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} paid {moneyAmount.ToString().ColorText(Color.white)} Tickets!".ColorText(CommandExtension.YellowColor));
             }
             else
             {
-                GetPlayerForCommand().AddTickets(moneyAmount);
-                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {moneyAmount.ToString().ColorText(Color.white)} Tickets!".ColorText(Yellow));
+                Player.Instance.AddTickets(moneyAmount);
+                MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {moneyAmount.ToString().ColorText(Color.white)} Tickets!".ColorText(CommandExtension.YellowColor));
             }
             return true;
         }
 
         // SET NAME
-        public static bool CommandFunction_SetName(string mayCommand)
+        public static bool CommandFunction_SetName(string commandInput)
         {
-            string[] mayCommandParam = mayCommand.Split(' ');
-            if (mayCommand.Length <= Commands.CmdName.Length + 1)
-            {
-                playerNameForCommands = playerNameForCommandsFirst;
-                MessageToChat($"Command target name {"reseted".ColorText(Green)} to {playerNameForCommandsFirst.ColorText(Color.magenta)}!".ColorText(Yellow));
-            }
-            else if (mayCommandParam.Length >= 2)
+            string[] mayCommandParam = commandInput.Split(' ');
+
+            if (mayCommandParam.Length >= 2)
             {
                 playerNameForCommands = mayCommandParam[1];
-                MessageToChat($"Command target name changed to {mayCommandParam[1].ColorText(Color.magenta)}!".ColorText(Color.yellow));
+                MessageToChat($"Command target name set to {mayCommandParam[1].ColorText(Color.magenta)}!".ColorText(CommandExtension.YellowColor));
+            }
+            else
+            {
+                playerNameForCommands = playerNameForCommandsFirst;
+                MessageToChat($"Command target name {"restoCommandExtension.RedColor".ColorText(CommandExtension.GreenColor)} to {playerNameForCommandsFirst.ColorText(Color.magenta)}!".ColorText(CommandExtension.YellowColor));
             }
             return true;
         }
 
         // CHANGE DATE (only hour and day!)
         // TODO: split into day command and hour command, rename years command to year
-        public static bool CommandFunction_ChangeDate(string mayCommand)
+        public static bool CommandFunction_ChangeDate(string commandInput)
         {
-            string[] mayCommandParam = mayCommand.ToLower().Split(' ');
+            string[] mayCommandParam = commandInput.Split(' ');
+
             if (mayCommandParam.Length == 3)
             {
                 var Date = DayCycle.Instance;
@@ -384,27 +456,32 @@ namespace CommandExtension
                     {
                         case 'd':
                             if (dateValue <= 0 || dateValue > 28)
-                            { MessageToChat($"day {"1-28".ColorText(Color.white)} are allowed".ColorText(Red)); return true; }
+                            { MessageToChat($"day {"1-28".ColorText(Color.white)} are allowed".ColorText(CommandExtension.RedColor)); return true; }
                             Date.Time = new DateTime(Date.Time.Year, Date.Time.Month, dateValue, Date.Time.Hour + 1, Date.Time.Minute, Date.Time.Second, Date.Time.Millisecond);
                             typeof(DayCycle).GetMethod("SetInitialTime", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(DayCycle.Instance, null);
-                            MessageToChat($"{"Day".ColorText(Green)} set to {dateValue.ToString().ColorText(Color.white)}!".ColorText(Yellow));
+                            MessageToChat($"{"Day".ColorText(CommandExtension.GreenColor)} set to {dateValue.ToString().ColorText(Color.white)}!".ColorText(CommandExtension.YellowColor));
                             break;
+
                         case 'h':
-                            if (dateValue < 6 || dateValue > 23) // 6-23 
-                            { MessageToChat($"hour {"6-23".ColorText(Color.white)} are allowed".ColorText(Red)); return true; }
+                            if (dateValue < 6 || dateValue > 22) // 6-23 
+                            { MessageToChat($"hour {"6-23".ColorText(Color.white)} are allowed".ColorText(CommandExtension.RedColor)); return true; }
                             Date.Time = new DateTime(Date.Time.Year, Date.Time.Month, Date.Time.Day, dateValue + 1, Date.Time.Minute, Date.Time.Second, Date.Time.Millisecond);
-                            MessageToChat($"{"Hour".ColorText(Green)} set to {dateValue.ToString().ColorText(Color.white)}!".ColorText(Yellow));
+                            MessageToChat($"{"Hour".ColorText(CommandExtension.GreenColor)} set to {dateValue.ToString().ColorText(Color.white)}!".ColorText(CommandExtension.YellowColor));
                             break;
                     }
+                    return true;
                 }
             }
+
+            MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
             return true;
         }
 
         // CHANGE WEATHER
-        public static bool CommandFunction_ChangeWeather(string mayCommand)
+        public static bool CommandFunction_ChangeWeather(string commandInput)
         {
-            string[] mayCommandParam = mayCommand.ToLower().Split(' ');
+            string[] mayCommandParam = commandInput.Split(' ');
+
             if (mayCommandParam.Length >= 2)
             {
                 var Date = DayCycle.Instance;
@@ -412,25 +489,33 @@ namespace CommandExtension
                 {
                     case 'r': // rain toggle
                         Date.SetToRaining(Date.Raining ? false : true);
-                        MessageToChat($"{"Raining".ColorText(Green)} turned {(!Date.Raining ? "Off".ColorText(Red) : "On".ColorText(Green))}!".ColorText(Yellow));
+                        MessageToChat($"{"Raining".ColorText(CommandExtension.GreenColor)} turned {(!Date.Raining ? "Off".ColorText(CommandExtension.RedColor) : "On".ColorText(CommandExtension.GreenColor))}!".ColorText(CommandExtension.YellowColor));
                         break;
+
                     case 'h': // heatwave toggle
                         Date.SetToHeatWave(Date.Heatwave ? false : true);
-                        MessageToChat($"{"Heatwave".ColorText(Green)} turned {(!Date.Heatwave ? "Off".ColorText(Red) : "On".ColorText(Green))}!".ColorText(Yellow));
+                        MessageToChat($"{"Heatwave".ColorText(CommandExtension.GreenColor)} turned {(!Date.Heatwave ? "Off".ColorText(CommandExtension.RedColor) : "On".ColorText(CommandExtension.GreenColor))}!".ColorText(CommandExtension.YellowColor));
                         break;
+
                     case 'c': // clear both
                         Date.SetToHeatWave(false);
                         Date.SetToRaining(false);
-                        MessageToChat($"{"Sunny".ColorText(Green)} weather turned {"On".ColorText(Green)}!".ColorText(Yellow));
+                        MessageToChat($"{"Sunny".ColorText(CommandExtension.GreenColor)} weather turned {"On".ColorText(CommandExtension.GreenColor)}!".ColorText(CommandExtension.YellowColor));
                         break;
                 }
+
+                return true;
             }
+
+            MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
             return true;
         }
 
         // GIVE ITEM BY ID/NAME 
-        public static bool CommandFunction_GiveItemByIdOrName(string[] mayCommandParam)
+        public static bool CommandFunction_GiveItemByIdOrName(string commandInput)
         {
+            string[] mayCommandParam = commandInput.Split(' ');
+
             if (mayCommandParam.Length >= 2)
             {
                 if (int.TryParse(mayCommandParam[1], out int itemId))
@@ -438,17 +523,17 @@ namespace CommandExtension
                     if (itemIds.Values.Contains(itemId))
                     {
                         int itemAmount = (mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1;
-                        GetPlayerForCommand().Inventory.AddItem(itemId, itemAmount, 0, true, true);
+                        Player.Instance.Inventory.AddItem(itemId, itemAmount, 0, true, true);
                         string itemName = "unknown";
-                        Database.GetData(itemId, delegate (ItemData data) 
+                        Database.GetData(itemId, delegate (ItemData data)
                         {
                             itemName = data.Name;
                         });
-                        MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {itemAmount.ToString().ColorText(Color.white)} x {itemName.ColorText(Color.white)}!".ColorText(Yellow));
+                        MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got {itemAmount.ToString().ColorText(Color.white)} x {itemName.ColorText(Color.white)}!".ColorText(CommandExtension.YellowColor));
                     }
                     else
                     {
-                        MessageToChat($"no item with id: {itemId.ToString().ColorText(Color.white)} found!".ColorText(Red));
+                        MessageToChat($"no item with id: {itemId.ToString().ColorText(Color.white)} found!".ColorText(CommandExtension.RedColor));
                     }
                 }
                 else
@@ -466,7 +551,7 @@ namespace CommandExtension
                                 if (mayCommandParam[1] == id.Key)
                                 {
                                     int itemAmount = ((mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1);
-                                    GetPlayerForCommand().Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
+                                    Player.Instance.Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
                                     return true;
                                 }
                             }
@@ -475,12 +560,12 @@ namespace CommandExtension
                         if (itemsFound == 1)
                         {
                             int itemAmount = ((mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1);
-                            GetPlayerForCommand().Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
+                            Player.Instance.Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
                         }
                         else if (itemsFound > 1)
                         {
                             MessageToChat("[Items Containing: ]".ColorText(new Color(0.1f, 0.1f, 0.1f)) + mayCommandParam[1].ColorText(new Color(0.26f, 0.26f, 0.26f)));
-                            MessageToChat("use a unique item-name or id".ColorText(Color.red));
+                            MessageToChat("use a unique item-name or id".ColorText(CommandExtension.RedColor));
                             foreach (KeyValuePair<string, int> id in itemIds)
                             {
                                 if (id.Key.Contains(mayCommandParam[1]))
@@ -491,24 +576,29 @@ namespace CommandExtension
                         }
                         else
                         {
-                            MessageToChat($"no item name contains {mayCommandParam[1].ColorText(Color.white)}!".ColorText(Red));
+                            MessageToChat($"no item name contains {mayCommandParam[1].ColorText(Color.white)}!".ColorText(CommandExtension.RedColor));
                         }
                     }
                     else
                     {
-                        MessageToChat($"invalid Item ID!".ColorText(Red));
+                        MessageToChat($"invalid Item ID!".ColorText(CommandExtension.RedColor));
+                        MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
                     }
                     return true;
                 }
             }
             else
-                MessageToChat($"wrong use of !give".ColorText(Red));
+            {
+                MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
+            }
             return true;
         }
 
-        // GIVE ITEM BY ID/NAME 
-        public static bool CommandFunction_ShowItemByName(string[] mayCommandParam)
+        // SHOW ITEM BY NAME 
+        public static bool CommandFunction_ShowItemByName(string commandInput)
         {
+            string[] mayCommandParam = commandInput.Split(' ');
+
             if (mayCommandParam.Length >= 2)
             {
                 List<string> items = new List<string>();
@@ -532,138 +622,120 @@ namespace CommandExtension
         }
 
         // GIVE DEV ITEMS
-        public static bool CommandFunction_GiveDevItems()
+        public static bool CommandFunction_GiveDevItems(string commandInput)
         {
             foreach (int item in new int[] { 30003, 30004, 30005, 30006, 30007, 30008 })
-                GetPlayerForCommand().Inventory.AddItem(item, 1, 0, true);
-            MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got a {"DevKit".ColorText(Color.white)}".ColorText(Yellow));
+            {
+                Player.Instance.Inventory.AddItem(item, 1, 0, true);
+            }
+            MessageToChat($"{playerNameForCommands.ColorText(Color.magenta)} got a {"DevKit".ColorText(Color.white)}".ColorText(CommandExtension.YellowColor));
             return true;
         }
 
         // INFINITE AIR-SKIPS
-        public static bool CommandFunction_InfiniteAirSkips()
+        public static bool CommandFunction_InfiniteAirSkips(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdDasher);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = infAirSkips = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // SHOW ID
-        public static bool CommandFunction_ShowID()
+        public static bool CommandFunction_ShowID(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdAppendItemDescWithId);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = appendItemDescWithId = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // FILL MANA
-        public static bool CommandFunction_ManaFill()
+        public static bool CommandFunction_ManaFill(string commandInput)
         {
-            var player = GetPlayerForCommand();
-            player.AddMana(player.MaxMana, 1f);
-            MessageToChat(playerNameForCommands.ColorText(Color.magenta) + "'s Mana Refilled".ColorText(Yellow));
+            Player.Instance.AddMana(Player.Instance.MaxMana, 1f);
+            MessageToChat(playerNameForCommands.ColorText(Color.magenta) + "'s Mana Refilled".ColorText(CommandExtension.YellowColor));
             return true;
         }
 
         // INFINITE MANA
-        public static bool CommandFunction_InfiniteMana()
+        public static bool CommandFunction_InfiniteMana(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdManaInf);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = infMana = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // FILL HEALTH
-        public static bool CommandFunction_HealthFill()
+        public static bool CommandFunction_HealthFill(string commandInput)
         {
-            var player = GetPlayerForCommand();
-            player.Heal(player.MaxMana, true, 1f);
-            MessageToChat(playerNameForCommands.ColorText(Color.magenta) + "'s Health Refilled".ColorText(Yellow));
+            Player.Instance.Heal(Player.Instance.MaxMana, true, 1f);
+            MessageToChat(playerNameForCommands.ColorText(Color.magenta) + "'s Health Refilled".ColorText(CommandExtension.YellowColor));
             return true;
         }
 
         // SLEEP
-        public static bool CommandFunction_Sleep()
+        public static bool CommandFunction_Sleep(string commandInput)
         {
-            GetPlayerForCommand().SkipSleep();
-            MessageToChat($"{"Slept".ColorText(Green)} once! Another Day is a Good Day!".ColorText(Yellow));
+            Player.Instance.SkipSleep();
+            MessageToChat($"{"Slept".ColorText(CommandExtension.GreenColor)} once! Another Day is a Good Day!".ColorText(CommandExtension.YellowColor));
             return true;
         }
 
         // PRINT ID ON HOVER
-        public static bool CommandFunction_PrintItemIdOnHover()
+        public static bool CommandFunction_PrintItemIdOnHover(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdPrintHoverItem);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            printOnHover = flag;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // TOGGLE COMMAND FEEDBACK
-        public static bool CommandFunction_ToggleFeedback()
+        public static bool CommandFunction_ToggleFeedback(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdFeedbackDisabled);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // PAUSE
-        public static bool CommandFunction_Pause()
+        public static bool CommandFunction_Pause(string commandInput)
         {
-            // get Command values
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdPause);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
-        // SLOW TIME
-        public static bool CommandFunction_CustomDaySpeed(string mayCommand)
+        // SLOW TIME  // TODO: turn to toggle command
+        public static bool CommandFunction_CustomDaySpeed(string commandInput)
         {
-            string[] mayCommandParam = mayCommand.Split(' ');
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdCustomDaySpeed);
-            if (mayCommandParam.Length >= 2)
+            string[] mayCommandParam = commandInput.Split(' ');
+            string command = mayCommandParam[0];
+
+            bool hasParams = mayCommandParam.Length >= 2;
+
+            if (hasParams)
             {
-                if (int.TryParse(mayCommandParam[1], out int value))
+                bool setValue = int.TryParse(mayCommandParam[1], out int value);
+                string action = "set to default";
+
+                if (setValue)
                 {
-                    Commands.GeneratedCommands[i].State = CommandState.Activated;
+                    action = "set to";
                     timeMultiplier = (float)System.Math.Round(20f / value, 4);
-                    MessageToChat($"Custom Dayspeed {"Activated".ColorText(Green)} and {"changed".ColorText(Green)}! multiplier: {timeMultiplier.ToString().ColorText(Color.white)}".ColorText(Yellow));
-                    return true;
                 }
                 else if (mayCommandParam[1].Contains("r") || mayCommandParam[1].Contains("d")) // r = reset | d = default
                 {
                     timeMultiplier = CommandDefaultValues.timeMultiplier;
-                    Commands.GeneratedCommands[i].State = CommandState.Activated;
-                    MessageToChat($"Custom Dayspeed {"Activated".ColorText(Green)} and {"reseted".ColorText(Green)}! multiplier: {timeMultiplier.ToString().ColorText(Color.white)}".ColorText(Yellow));
-                    return true;
                 }
+                else
+                {
+
+                    return false;
+                }
+
+                SetCommandState(commandKey: command, activate: true);
+                MessageToChat($"Custom Dayspeed {"Activated".ColorText(CommandExtension.GreenColor)} and {action.ColorText(CommandExtension.GreenColor)}: {timeMultiplier.ToString().ColorText(Color.white)}".ColorText(CommandExtension.YellowColor));
             }
-            else
-                Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // UI ON/OFF
-        public static bool CommandFunction_ToggleUI(string mayCommand)
+        public static bool CommandFunction_ToggleUI(string commandInput)
         {
-            string[] mayCommandParam = mayCommand.Split(' ');
+            string[] mayCommandParam = commandInput.Split(' ');
+
             if (mayCommandParam.Length >= 1)
             {
                 bool flag = true;
+                
                 if (mayCommandParam.Length >= 2)
                 {
                     if (mayCommandParam[1].Contains("on"))
@@ -699,297 +771,214 @@ namespace CommandExtension
 
                 for (int i = 0; i < values.Length; i++)
                 {
-                    MessageToChat("5".ColorText(Color.white) + ".".ColorText(Color.white) + i.ToString().ColorText(Color.white));
                     GameObject obj = Utilities.FindObject(GameObject.Find(values[i].rootName), values[i].childName);
                     GameObjectSetActiveState(obj, flag);
                 }
 
                 GameObject obj2 = GameObject.Find("QuestTrackerVisibilityToggle");
                 GameObjectSetActiveState(obj2, flag);
-                //GameObject gameObject = Utilities.FindObject(GameObject.Find("Player"), "ActionBar");
-                //if (gameObject != null)
-                //{
-                //    gameObject.SetActive(flag);
-                //}
-                //GameObject gameObject2 = Utilities.FindObject(GameObject.Find("Player(Clone)"), "ActionBar");
-                //if (gameObject2 != null)
-                //{
-                //    gameObject2.SetActive(flag);
-                //}
-                //GameObject gameObject3 = Utilities.FindObject(GameObject.Find("Player"), "ExpBars");
-                //if (gameObject3 != null)
-                //{
-                //    gameObject3.SetActive(flag);
-                //}
-                //GameObject gameObject4 = Utilities.FindObject(GameObject.Find("Player(Clone)"), "ExpBars");
-                //if (gameObject4 != null)
-                //{
-                //    gameObject4.SetActive(flag);
-                //}
-                //GameObject gameObject5 = Utilities.FindObject(GameObject.Find("Player"), "QuestTracking");
-                //if (gameObject5 != null)
-                //{
-                //    gameObject5.SetActive(flag);
-                //}
-                //GameObject gameObject6 = Utilities.FindObject(GameObject.Find("Player(Clone)"), "QuestTracking");
-                //if (gameObject6 != null)
-                //{
-                //    gameObject6.SetActive(flag);
-                //}
-                //GameObject gameObject7 = Utilities.FindObject(GameObject.Find("Player"), "QuestTracker");
-                //if (gameObject7 != null)
-                //{
-                //    gameObject7.SetActive(flag);
-                //}
-                //GameObject gameObject8 = Utilities.FindObject(GameObject.Find("Player(Clone)"), "QuestTracker");
-                //if (gameObject8 != null)
-                //{
-                //    gameObject8.SetActive(flag);
-                //}
-                //GameObject gameObject9 = Utilities.FindObject(GameObject.Find("Player"), "HelpNotifications");
-                //if (gameObject9 != null)
-                //{
-                //    gameObject9.SetActive(flag);
-                //}
-                //GameObject gameObject10 = Utilities.FindObject(GameObject.Find("Player(Clone)"), "HelpNotifications");
-                //if (gameObject10 != null)
-                //{
-                //    gameObject10.SetActive(flag);
-                //}
-                //GameObject gameObject11 = Utilities.FindObject(GameObject.Find("Player"), "NotificationStack");
-                //if (gameObject11 != null)
-                //{
-                //    gameObject11.SetActive(flag);
-                //}
-                //GameObject gameObject12 = Utilities.FindObject(GameObject.Find("Player(Clone)"), "NotificationStack");
-                //if (gameObject12 != null)
-                //{
-                //    gameObject12.SetActive(flag);
-                //}
-                //GameObject gameObject13 = Utilities.FindObject(GameObject.Find("Manager"), "UI");
-                //if (gameObject13 != null)
-                //{
-                //    gameObject13.SetActive(flag);
-                //}
-                //GameObject gameObject14 = GameObject.Find("QuestTrackerVisibilityToggle");
-                //if (gameObject14 != null)
-                //{
-                //    gameObject14.SetActive(flag);
-                //}
 
-                MessageToChat("UI now ".ColorText(Yellow) + (flag ? "Visible".ColorText(Green) : "Hidden".ColorText(Green)));
+                MessageToChat("UI now ".ColorText(CommandExtension.YellowColor) + (flag ? "Visible".ColorText(CommandExtension.GreenColor) : "Hidden".ColorText(CommandExtension.GreenColor)));
             }
             return true;
         }
 
         // JUMPER
-        public static bool CommandFunction_Jumper()
+        public static bool CommandFunction_Jumper(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdJumper);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            jumpOver = flag;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // NOCLIP
-        public static bool CommandFunction_NoClip()
+        public static bool CommandFunction_NoClip(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdNoClip);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            GetPlayerForCommand().rigidbody.bodyType = Commands.GeneratedCommands[i].State == CommandState.Activated ? RigidbodyType2D.Kinematic : RigidbodyType2D.Dynamic;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // NO HIT
-        public static bool CommandFunction_NoHit()
+        public static bool CommandFunction_NoHit(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdNoHit);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            GetPlayerForCommand().Invincible = flag;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // AUTO-FILL MUSEUM
-        public static bool CommandFunction_AutoFillMuseum()
+        public static bool CommandFunction_AutoFillMuseum(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdAutoFillMuseum);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // CHEAT-FILL MUSEUM
-        public static bool CommandFunction_CheatFillMuseum()
+        public static bool CommandFunction_CheatFillMuseum(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdCheatFillMuseum);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
-        // TELEPORT
-        public static bool CommandFunction_TeleportToScene(string[] mayCmdParam)
+        // TELEPORT  // TODO: 
+        public static bool CommandFunction_TeleportToScene(string commandInput)
         {
-            if (mayCmdParam.Length <= 1)
+            string[] mayCommandParam = commandInput.Split(' ');
+
+            if (!(mayCommandParam.Length >= 2))
+            {
                 return true;
-            string scene = mayCmdParam[1];
-            if (scene == "withergatefarm")
+            }
+
+            string sceneName = mayCommandParam[1];
+            if (sceneName == "withergatefarm")
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(138f, 89.16582f), "WithergateRooftopFarm");
             }
-            else if (scene == "throneroom")
+            else if (sceneName == "throneroom")
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(21.5f, 8.681581f), "Throneroom");
             }
-            else if (scene == "nelvari")
+            else if (sceneName == "nelvari")
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(320.3333f, 98.76098f), "Nelvari6");
             }
-            else if (scene == "wishingwell")
+            else if (sceneName == "wishingwell")
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(55.83683f, 61.48384f), "WishingWell");
             }
-            else if (scene.Contains("altar"))
+            else if (sceneName.Contains("altar"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(199.3957f, 122.6284f), "DynusAltar");
             }
-            else if (scene.Contains("hospital"))
+            else if (sceneName.Contains("hospital"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(80.83334f, 65.58415f), "Hospital");
             }
-            else if (scene.Contains("sunhaven"))
+            else if (sceneName.Contains("sunhaven"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(268.125f, 299.9311f), "Town10");
             }
-            else if (scene.Contains("nelvarifarm"))
+            else if (sceneName.Contains("nelvarifarm"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(139.6753f, 100.4739f), "NelvariFarm");
             }
-            else if (scene.Contains("nelvarimine"))
+            else if (sceneName.Contains("nelvarimine"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(144.7133f, 152.1591f), "NelvariMinesEntrance");
             }
-            else if (scene.Contains("nelvarihome"))
+            else if (sceneName.Contains("nelvarihome"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(51.5f, 54.97755f), "NelvariPlayerHouse");
             }
-            else if (scene.Contains("castle"))
+            else if (sceneName.Contains("castle"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(133.7634f, 229.2485f), "Withergatecastleentrance");
             }
-            else if (scene.Contains("withergatehome"))
+            else if (sceneName.Contains("withergatehome"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(63.5f, 54.624f), "WithergatePlayerApartment");
             }
-            else if (scene.Contains("grandtree"))
+            else if (sceneName.Contains("grandtree"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(314.4297f, 235.2298f), "GrandTreeEntrance1");
             }
-            else if (scene.Contains("taxi"))
+            else if (sceneName.Contains("taxi"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(101.707f, 123.4622f), "WildernessTaxi");
             }
-            else if (scene == "dynus")
+            else if (sceneName == "dynus")
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(94.5f, 121.09f), "Dynus");
             }
-            else if (scene == "sewer")
+            else if (sceneName == "sewer")
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(134.5833f, 129.813f), "Sewer");
             }
-            else if (scene == "nivara")
+            else if (sceneName == "nivara")
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(99f, 266.6305f), "Nivara");
             }
-            else if (scene.Contains("barrack"))
+            else if (sceneName.Contains("barrack"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(71.58334f, 54.56507f), "Barracks");
             }
-            else if (scene.Contains("elios"))
+            else if (sceneName.Contains("elios"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(113.9856f, 104.2902f), "DragonsMeet");
             }
-            else if (scene.Contains("dungeon"))
+            else if (sceneName.Contains("dungeon"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(136.48f, 193.92f), "CombatDungeonEntrance");
             }
-            else if (scene.Contains("store"))
+            else if (sceneName.Contains("store"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(77.5f, 58.55f), "GeneralStore");
             }
-            else if (scene.Contains("beach"))
+            else if (sceneName.Contains("beach"))
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(96.491529f, 87.46871f), "BeachRevamp");
             }
-            else if (scene == "home" || scene.Contains("sunhavenhome") || scene == "farm")
+            else if (sceneName == "home" || sceneName.Contains("sunhavenhome") || sceneName == "farm")
             {
                 lastScene = ScenePortalManager.ActiveSceneName;
                 lastLocation = Player.Instance.transform.position;
                 ScenePortalManager.Instance.ChangeScene(new Vector2(316.4159f, 152.5824f), "2Playerfarm");
             }
-            else if (scene == "back")
+            else if (sceneName == "back")
+            {
                 ScenePortalManager.Instance.ChangeScene(lastLocation, lastScene);
+            }
             else
-                MessageToChat("invalid scene name".ColorText(Color.red));
+            {
+                MessageToChat($"Location {sceneName.ColorText(Color.white)} not found".ColorText(CommandExtension.RedColor));
+            }
 
             return true;
         }
 
         // GET TELEPORT LOCATIONS
-        public static bool CommandFunction_TeleportLocations()
+        public static bool CommandFunction_TeleportLocations(string commandInput)
         {
+            string[] mayCommandParam = commandInput.Split(' ');
+
             MessageToChat("[Locations]".ColorText(Color.black));
             foreach (string tpLocation in tpLocations)
             {
@@ -1000,16 +989,18 @@ namespace CommandExtension
         }
 
         // SET RELATIONSHIP
-        public static bool CommandFunction_Relationship(string[] mayCmdParam)
+        public static bool CommandFunction_Relationship(string commandInput)
         {
-            if (mayCmdParam.Length >= 3)
+            string[] mayCommandParam = commandInput.Split(' ');
+
+            if (mayCommandParam.Length >= 3)
             {
-                string name = mayCmdParam[1];
-                bool all = mayCmdParam[1] == "all";
-                bool add = mayCmdParam.Length >= 4 && mayCmdParam[3] == "add";
+                string name = mayCommandParam[1];
+                bool all = mayCommandParam[1] == "all";
+                bool add = mayCommandParam.Length >= 4 && mayCommandParam[3] == "add";
 
                 float value;
-                if (float.TryParse(mayCmdParam[2], out value))
+                if (float.TryParse(mayCommandParam[2], out value))
                 {
                     value = Math.Max(0, Math.Min(100, value));
                     NPCAI[] npcs = UnityEngine.Object.FindObjectsOfType<NPCAI>();
@@ -1020,162 +1011,84 @@ namespace CommandExtension
                             if (add)
                             {
                                 npc.AddRelationship(value);
-                                if (!all)
-                                {
-                                    MessageToChat($"Relationship with {npc.NPCName.ColorText(Color.white)} is now {SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships[npc.NPCName].ToString().ColorText(Color.white)}!".ColorText(Green));
-                                    return true;
-                                }
                             }
                             else
                             {
                                 SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships[npc.NPCName] = value;
-                                if (!all)
-                                {
-                                    MessageToChat($"Relationship with {npc.NPCName.ColorText(Color.white)} set to {value.ToString().ColorText(Color.white)}!".ColorText(Green));
-                                    return true;
-                                }
                             }
+
+                            MessageToChat($"Relationship with {npc.NPCName.ColorText(Color.white)} set to {SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships[npc.NPCName].ToString().ColorText(Color.white)}!".ColorText(CommandExtension.GreenColor));
+                            return true;
                         }
                     }
-                    if (all)
-                        MessageToChat(add ? "Relationships increased!".ColorText(Green) : "Relationships set!".ColorText(Green));
-                    else
-                        MessageToChat($"No NPC with the name {name.ColorText(Color.white)} found!".ColorText(Red));
+
+                    MessageToChat($"No NPC with the name {name.ColorText(Color.white)} found!".ColorText(CommandExtension.RedColor));
                 }
                 else
-                    MessageToChat($"NO VALID VALUE, try '{$"!relationship {name.ColorText(Color.white)} 10".ColorText(Color.white)}'".ColorText(Red));
+                {
+                    MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
+                }
             }
+
             return true;
         }
 
         // UN-MARRY NPC
-        public static bool CommandFunction_UnMarry(string[] mayCmdParam)
+        public static bool CommandFunction_UnMarry(string commandInput)
         {
-            if (mayCmdParam.Length >= 2)
-            {
-                bool all = mayCmdParam[1] == "all";
-                string name = FirstCharToUpper(mayCmdParam[1]);
-                NPCAI[] npcs = UnityEngine.Object.FindObjectsOfType<NPCAI>();
-
-                if (npcs == null || npcs.Length == 0)
-                {
-                    return true;
-                }
-
-                if (all)
-                {
-                    foreach (NPCAI npc in npcs)
-                    {
-                        Marry(npcai: npc, unmarry: true, notify: true);
-                    }
-                }
-                else
-                {
-                    NPCAI npc = npcs.FirstOrDefault(npc => GetNpcName(npc.NPCName) == name);
-                    if (npc != null)
-                    {
-                        Marry(npcai: npc, unmarry: true, notify: true);
-                    }
-                    else
-                    {
-                        MessageToChat("no npc with the name: ".ColorText(Red) + name.ColorText(Yellow));
-                    }
-                }
-            }
-            else
-            {
-                MessageToChat("a name or parameter 'all' needed");
-            }
-
-            return true;
+            return ProcessMarry(commandInput, true);
         }
 
         // MARRY NPC
-        public static bool CommandFunction_MarryNPC(string[] mayCmdParam)
+        public static bool CommandFunction_Marry(string commandInput)
         {
-            if (mayCmdParam.Length >= 2)
-            {
-                bool all = mayCmdParam[1] == "all";
-                string name = FirstCharToUpper(mayCmdParam[1]);
-                NPCAI[] npcs = UnityEngine.Object.FindObjectsOfType<NPCAI>();
-
-                if (npcs == null || npcs.Length == 0)
-                {
-                    return true;
-                }
-
-                if (all)
-                {
-                    foreach (NPCAI npc in npcs)
-                    {
-                        Marry(npcai: npc, unmarry: false, notify: true);
-                    }
-                }
-                else
-                {
-                    NPCAI npc = npcs.FirstOrDefault(npc => GetNpcName(npc.NPCName) == name);
-                    if (npc != null)
-                    {
-                        Marry(npcai: npc, unmarry: false, notify: true);
-                    }
-                    else
-                    {
-                        MessageToChat("no npc with the name: ".ColorText(Red) + name.ColorText(Yellow));
-                    }
-                }
-            }
-            else
-            {
-                MessageToChat("a name or parameter 'all' needed");
-            }
-            return true;
+            return ProcessMarry(commandInput, false);
         }
 
         // SET SEASON
-        public static bool CommandFunction_SetSeason(string[] mayCmdParam)
+        public static bool CommandFunction_SetSeason(string commandInput)
         {
-            if (mayCmdParam.Length < 2)
+            string[] mayCommandParam = commandInput.Split(' ');
+
+            if (mayCommandParam.Length < 2 || !Enum.TryParse(mayCommandParam[1], true, out Season season2))
             {
-                MessageToChat("specify the season!".ColorText(Red)); return true;
+                MessageToChat("invalid season!".ColorText(CommandExtension.RedColor));
+                MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
+                return true;
             }
-            if (!Enum.TryParse(mayCmdParam[1], true, out Season season2))
-            {
-                MessageToChat("no valid season!".ColorText(Red)); return true;
-            }
+
             var Date = DayCycle.Instance;
             int targetYear = Date.Time.Year + ((int)season2 - (int)Date.Season + 4) % 4;
 
             DayCycle.Instance.Time = new DateTime(targetYear, Date.Time.Month, 1, Date.Time.Hour, Date.Time.Minute, 0, DateTimeKind.Utc).ToUniversalTime();
             typeof(DayCycle).GetMethod("SetInitialTime", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(DayCycle.Instance, null);
 
-            MessageToChat("It's now ".ColorText(Yellow) + season2.ToString().ColorText(Green));
-            //DayCycle.Instance.SetSeason(season2);
+            MessageToChat("It's now ".ColorText(CommandExtension.YellowColor) + season2.ToString().ColorText(CommandExtension.GreenColor));
             return true;
         }
 
         // YEAR FIX
-        public static bool CommandFunction_ToggleYearFix()
+        public static bool CommandFunction_ToggleYearFix(string commandInput)
         {
-            //int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdFixYear);
-            //Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            //bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            //yearFix = flag;
-            //CommandFunction_PrintToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
         // CHANGE YEAR
-        public static bool CommandFunction_Year(string mayCommand)
+        public static bool CommandFunction_Year(string commandInput)
         {
-            if (!int.TryParse(Regex.Match(mayCommand, @"\d+").Value, out int value))
+            string[] mayCommandParam = commandInput.Split(' ');
+
+            if (!int.TryParse(Regex.Match(commandInput, @"\d+").Value, out int value))
             {
-                MessageToChat("Something wen't wrong..".ColorText(Red));
-                MessageToChat("Try '!years 1' or '!years -1'".ColorText(Red));
+                MessageToChat("Something wen't wrong..".ColorText(CommandExtension.RedColor));
+                MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
                 return true;
             }
-            var Date = DayCycle.Instance;
+
+            DayCycle Date = DayCycle.Instance;
             int newYear;
-            if (mayCommand.Contains("-"))
+
+            if (commandInput.Contains("-"))
             {
                 if (Date.Time.Year - (value * 4) >= 1)
                     newYear = Date.Time.Year - (value * 4);
@@ -1186,23 +1099,21 @@ namespace CommandExtension
                 }
             }
             else
+            {
                 newYear = Date.Time.Year + (value * 4);
+            }
 
             DayCycle.Instance.Time = new DateTime(newYear, Date.Time.Month, Date.Time.Day, Date.Time.Hour, Date.Time.Minute, 0, DateTimeKind.Utc).ToUniversalTime();
             typeof(DayCycle).GetMethod("SetInitialTime", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(DayCycle.Instance, null);
-            MessageToChat($"It's now Year {(Date.Time.Year / 4).ToString().ColorText(Green)}!".ColorText(Yellow));
+
+            MessageToChat($"It's now Year {(Date.Time.Year / 4).ToString().ColorText(CommandExtension.GreenColor)}!".ColorText(CommandExtension.YellowColor));
             return true;
         }
 
         // TOGGLE CHEATS
-        public static bool CommandFunction_ToggleCheats()
+        public static bool CommandFunction_ToggleCheats(string commandInput)
         {
-            int i = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdCheats);
-            Commands.GeneratedCommands[i].State = Commands.GeneratedCommands[i].State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated;
-            bool flag = Commands.GeneratedCommands[i].State == CommandState.Activated;
-            Settings.EnableCheats = flag;
-            MessageToChat($"{Commands.GeneratedCommands[i].Name} {Commands.GeneratedCommands[i].State.ToString().ColorText(flag ? Green : Red)}".ColorText(Yellow));
-            return true;
+            return ToggleCommandState(commandInput.Split(' ')[0], true);
         }
 
 
@@ -1210,21 +1121,36 @@ namespace CommandExtension
         // Utility
         // ============================================================
 
-        private static void GiveOrPrintItem(int id, int amount, bool give = false)
+        private static bool ToggleCommandState(string commandKey, bool notifyPlayer = true)
         {
-            //Commands.CmdPrintItemIds + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]"
-            if (give)
+            string state = Commands.ToggleCommandState(commandKey)
+                ? "On".ColorText(CommandExtension.GreenColor) : "Off".ColorText(CommandExtension.RedColor);
+
+            if (notifyPlayer)
             {
-                GetPlayerForCommand().Inventory.AddItem(id, amount, 0, true, true);
+                MessageToChat($"{commandKey} {state}".ColorText(CommandExtension.YellowColor));
             }
-            else
-            {
-                MessageToChat($"{amount} : {id}");
-            }
+
+            return true;
         }
+
+        private static bool SetCommandState(string commandKey, bool activate = true, bool notifyPlayer = true)
+        {
+            Commands.SetCommandState(commandKey, activate);
+            string state = activate
+                ? "On".ColorText(CommandExtension.GreenColor) : "Off".ColorText(CommandExtension.RedColor);
+
+            if (notifyPlayer)
+            {
+                MessageToChat($"{commandKey} {state}".ColorText(CommandExtension.YellowColor));
+            }
+
+            return true;
+        }
+
         public static void MessageToChat(string text)
         {
-            if (Commands.GeneratedCommands.First(command => command.Name == Commands.CmdPrefix + Commands.CmdFeedbackDisabled).State == CommandState.Deactivated)
+            if (Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyFeedbackDisabled))
             {
                 QuantumConsole.Instance.LogPlayerText(text);
             }
@@ -1239,65 +1165,147 @@ namespace CommandExtension
             return input.First().ToString().ToUpper() + input.Substring(1);
         }
 
+        private static void MuseumGiveOrPrintItem(int id, int amount, bool give = false)
+        {
+            //Commands.CmdPrintItemIds + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]"
+            if (give)
+            {
+                Player.Instance.Inventory.AddItem(id, amount, 0, true, true);
+            }
+            else
+            {
+                MessageToChat($"{amount} : {id}");
+            }
+        }
+
         private static void GameObjectSetActiveState(GameObject obj, bool state)
         {
             obj?.SetActive(state);
         }
 
-        private static void Marry(NPCAI npcai, bool unmarry = false, bool notify = false)
+		private static readonly Regex npcNameRegex = new(@"[a-zA-Z\s\.]+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+		private static bool ProcessMarry(string commandInput, bool unmarry = false)
         {
-            string npcName = npcai.NPCName;
-            if (string.IsNullOrWhiteSpace(npcName) || !SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships.ContainsKey(npcai.NPCName))
-            {
-                return;
-            }
-            npcai.MarryPlayer();
+			static void Marry(NPCAI npcai, bool unmarry = false, bool notify = false)
+			{
+				string npcName = npcai.NPCName;
+				if (string.IsNullOrWhiteSpace(npcName) || !SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships.ContainsKey(npcai.NPCName))
+				{
+					return;
+				}
 
-            if (!unmarry)
+				npcai.MarryPlayer();
+
+				if (!unmarry)
+				{
+					if (SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships.ContainsKey(npcName))
+					{
+						SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships[npcName] = 100f;
+					}
+
+					npcai.MarryPlayer();
+					MessageToChat($"Married with {npcName.ColorText(Color.white)}!".ColorText(CommandExtension.GreenColor));
+				}
+				else
+				{
+					string progressStringCharacter = SingletonBehaviour<GameSave>.Instance.GetProgressStringCharacter("MarriedWith");
+					if (!progressStringCharacter.IsNullOrWhiteSpace())
+					{
+						SingletonBehaviour<GameSave>.Instance.SetProgressStringCharacter("MarriedWith", "");
+						SingletonBehaviour<GameSave>.Instance.SetProgressBoolCharacter("Married", false);
+						SingletonBehaviour<GameSave>.Instance.SetProgressBoolCharacter("MarriedTo" + progressStringCharacter, false);
+						GameSave.CurrentCharacter.Relationships[progressStringCharacter] = 40f;
+						SingletonBehaviour<NPCManager>.Instance.GetRealNPC(progressStringCharacter).GenerateCycle(false);
+					}
+
+					MessageToChat($"Divorced from {npcName.ColorText(Color.white)}!".ColorText(CommandExtension.GreenColor));
+				}
+			}
+
+			string[] mayCommandParam = commandInput.Split(' ');
+
+            if (mayCommandParam.Length >= 2)
             {
-                if (SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships.ContainsKey(npcName))
+                string name = FirstCharToUpper(mayCommandParam[1]);
+                bool all = mayCommandParam[1] == "all";
+                NPCAI[] npcs = UnityEngine.Object.FindObjectsOfType<NPCAI>();
+
+                if (npcs == null || npcs.Length == 0)
                 {
-                    SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships[npcName] = 100f;
+                    return true;
                 }
 
-                npcai.MarryPlayer();
-                MessageToChat($"Married with {npcName.ColorText(Color.white)}!".ColorText(Green));
+
+                if (all)
+                {
+                    foreach (NPCAI npc in npcs)
+                    {
+                        Marry(npcai: npc, unmarry: unmarry, notify: true);
+                    }
+                }
+                else
+                {
+					static string GetNpcName(string name)
+					{
+						Match match = npcNameRegex.Match(name);
+						return match.Success ? match.Value : string.Empty;
+					}
+
+					NPCAI npc = npcs.FirstOrDefault(npc => GetNpcName(npc.NPCName) == name);
+                    if (npc != null)
+                    {
+                        Marry(npcai: npc, unmarry: unmarry, notify: true);
+                    }
+                    else
+                    {
+                        MessageToChat($"No NPC with the name {name.ColorText(Color.white)} found!".ColorText(CommandExtension.RedColor));
+                    }
+                }
             }
             else
             {
-                string progressStringCharacter = SingletonBehaviour<GameSave>.Instance.GetProgressStringCharacter("MarriedWith");
-                if (!progressStringCharacter.IsNullOrWhiteSpace())
-                {
-                    SingletonBehaviour<GameSave>.Instance.SetProgressStringCharacter("MarriedWith", "");
-                    SingletonBehaviour<GameSave>.Instance.SetProgressBoolCharacter("Married", false);
-                    SingletonBehaviour<GameSave>.Instance.SetProgressBoolCharacter("MarriedTo" + progressStringCharacter, false);
-                    GameSave.CurrentCharacter.Relationships[progressStringCharacter] = 40f;
-                    SingletonBehaviour<NPCManager>.Instance.GetRealNPC(progressStringCharacter).GenerateCycle(false);
-                }
-
-                MessageToChat($"Divorced from {npcName.ColorText(Color.white)}!".ColorText(Green));
+                MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
             }
-        }
-        private static readonly Regex npcNameRegex = new Regex(@"[a-zA-Z\s\.]+", RegexOptions.Compiled);
-        private static string GetNpcName(string name)
-        {
-            var match = npcNameRegex.Match(name);
-            return match.Success ? match.Value : string.Empty;
+
+            return true;
         }
 
-        // get the player for singleplayer/multiplayer
-        public static Player GetPlayerForCommand()
-        {
-            Player[] players = UnityEngine.Object.FindObjectsOfType<Player>();
-            foreach (Player player in players)
-            {
-                if (players.Length == 1 || player.GetComponent<NetworkGamePlayer>().playerName == playerNameForCommands)
-                    return player;
-            }
-            return null;
-        }
+        //private static void Marry(NPCAI npcai, bool unmarry = false, bool notify = false)
+        //{
+        //    string npcName = npcai.NPCName;
+        //    if (string.IsNullOrWhiteSpace(npcName) || !SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships.ContainsKey(npcai.NPCName))
+        //    {
+        //        return;
+        //    }
+		//
+        //    npcai.MarryPlayer();
+		//
+        //    if (!unmarry)
+        //    {
+        //        if (SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships.ContainsKey(npcName))
+        //        {
+        //            SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Relationships[npcName] = 100f;
+        //        }
+		//
+        //        npcai.MarryPlayer();
+        //        MessageToChat($"Married with {npcName.ColorText(Color.white)}!".ColorText(CommandExtension.GreenColor));
+        //    }
+        //    else
+        //    {
+        //        string progressStringCharacter = SingletonBehaviour<GameSave>.Instance.GetProgressStringCharacter("MarriedWith");
+        //        if (!progressStringCharacter.IsNullOrWhiteSpace())
+        //        {
+        //            SingletonBehaviour<GameSave>.Instance.SetProgressStringCharacter("MarriedWith", "");
+        //            SingletonBehaviour<GameSave>.Instance.SetProgressBoolCharacter("Married", false);
+        //            SingletonBehaviour<GameSave>.Instance.SetProgressBoolCharacter("MarriedTo" + progressStringCharacter, false);
+        //            GameSave.CurrentCharacter.Relationships[progressStringCharacter] = 40f;
+        //            SingletonBehaviour<NPCManager>.Instance.GetRealNPC(progressStringCharacter).GenerateCycle(false);
+        //        }
+		//
+        //        MessageToChat($"Divorced from {npcName.ColorText(Color.white)}!".ColorText(CommandExtension.GreenColor));
+        //    }
+        //}
 
-        // Categorize all items
         private static bool CategorizeItemList()
         {
             if (itemIds == null || itemIds.Count < 1)
@@ -1361,176 +1369,133 @@ namespace CommandExtension
     [CommandPrefix("!")]
     public partial class CommandsToGenerate
     {
-        [Command(Commands.CmdHelp, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyHelp, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm0() { }
 
-        [Command(Commands.CmdState, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyState, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm1() { }
 
-        [Command(Commands.CmdPrintItemIds, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyPrintCategorizedItems, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm2(string xp_currency_bonus_Pet_decoration_armor_tool_food_crop_fish_normal) { }
 
-        [Command(Commands.CmdMineReset, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyMineReset, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm3() { }
 
-        [Command(Commands.CmdMineClear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyMineClear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm4() { }
 
-        [Command(Commands.CmdMineOverfill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyMineOverfill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm5() { }
 
-        [Command(Commands.CmdCoins, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyCoins, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm6(string amount) { }
 
-        [Command(Commands.CmdOrbs, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyOrbs, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm7(string amount) { }
 
-        [Command(Commands.CmdTickets, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyTickets, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm8(string amount) { }
 
-        [Command(Commands.CmdName, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyName, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm9(string playerName) { }
 
-        [Command(Commands.CmdSetDate, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeySetDate, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         public static void fm10(string DayOrHoure_and_Value) { }
 
-        [Command(Commands.CmdWeather, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyWeather, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         public static void fm11(string raining_or_heatwave_or_clear) { }
 
-        [Command(Commands.CmdGive, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyGive, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm12(string itemName) { }
 
-        [Command(Commands.CmdShowItems, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyShowItems, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm13(string itemName_ToShowItemsWithGivenName) { }
 
-        [Command(Commands.CmdDevKit, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyDevKit, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm14() { }
 
-        [Command(Commands.CmdDasher, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyDasher, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm15() { }
 
         //[Command(Commands.CmdAppendItemDescWithId, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("None")]
         //private static void fm16(string INFO_ShowsItemIdsInDescription) { }
 
-        [Command(Commands.CmdManaFill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyManaFill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm17() { }
 
-        [Command(Commands.CmdManaInf, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyManaInf, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm18() { }
 
-        [Command(Commands.CmdHealthFill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyHealthFill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm19() { }
 
-        [Command(Commands.CmdSleep, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeySleep, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm20() { }
 
-        [Command(Commands.CmdPrintHoverItem, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyShowItemIdOnHover, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm21(string INFO_sendItemIdAndNameToChat) { }
 
-        [Command(Commands.CmdFeedbackDisabled, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyFeedbackDisabled, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm22() { }
 
-        [Command(Commands.CmdPause, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("None")]
+        [Command(Commands.CmdKeyPause, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm23() { }
 
-        [Command(Commands.CmdCustomDaySpeed, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Set custom time speed")]
+        [Command(Commands.CmdKeyCustomDaySpeed, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm24(string Value_or_Nothing_to_reset) { }
 
-        [Command(Commands.CmdUI, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Toggle UI on/off")]
+        [Command(Commands.CmdKeyUI, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm25(string On_or_Off) { }
 
-        [Command(Commands.CmdJumper, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Jump over objects")]
+        [Command(Commands.CmdKeyJumper, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm26() { }
 
-        [Command(Commands.CmdNoClip, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Walk through walls")]
+        [Command(Commands.CmdKeyNoClip, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm27() { }
 
-        [Command(Commands.CmdNoHit, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Not hitable mode")]
+        [Command(Commands.CmdKeyNoHit, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm28() { }
 
-        [Command(Commands.CmdAutoFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Fill Museum apon entry with items from inventory")]
+        [Command(Commands.CmdKeyAutoFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm29(string INFO_autofillMusuemOnEnterMuseum) { }
        
-        [Command(Commands.CmdCheatFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Fill Museum apon entry without loosing items")]
+        [Command(Commands.CmdKeyCheatFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm30(string INFO_cheatfillMusuemOnEnterMuseum) { }
 
-        [Command(Commands.CmdTeleport, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("teleport to location")]
+        [Command(Commands.CmdKeyTeleport, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm31(string location) { }
 
-        [Command(Commands.CmdTeleportLocations, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("List teleport locations")]
+        [Command(Commands.CmdKeyTeleportLocations, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm32() { }
 
         //[Command(Commands.CmdDespawnPet, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("despawn pet")]
         //private static void fm33(string Pet_Name) { }
 
         //[Command(Commands.CmdSpawnPet, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("spawn pet")]
         //private static void fm34(string Pet_Name) { }
 
         //[Command(Commands.CmdPetList, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("List all pets")]
         //private static void fm35(string Pet_Name) { }
 
-        [Command(Commands.CmdUnMarry, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Divorce/Unmarry")]
+        [Command(Commands.CmdKeyUnMarry, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm36(string NPC_Name) { }
 
-        [Command(Commands.CmdRelationship, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("set NPC Relationship level (1-20?)")]
+        [Command(Commands.CmdKeyRelationship, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm37(string NPC_Name_and_value) { }
 
-        [Command(Commands.CmdMarryNpc, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("set Marry NPC's")]
+        [Command(Commands.CmdKeyMarry, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm38(string NPC_Name) { }
 
-        [Command(Commands.CmdSetSeason, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("set the season (Spring, Summer, Fall, Winter)")]
+        [Command(Commands.CmdKeySetSeason, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm39(string season) { }
 
         //[Command(Commands.CmdFixYear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //[CommandDescription("Fix the year calculation")]
         //private static void fm40(string value) { }
 
-        [Command(Commands.CmdIncDecYear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Increase/Decrase the current year")]
+        [Command(Commands.CmdKeyIncDecYear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm41(string amount) { }
 
-        [Command(Commands.CmdCheats, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        [CommandDescription("Toggle SunHaven cheats enabled")]
+        [Command(Commands.CmdKeyCheats, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
         private static void fm42() { }
     }
 }

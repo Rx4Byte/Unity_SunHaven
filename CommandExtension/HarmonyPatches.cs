@@ -14,7 +14,7 @@ using Wish;
 
 namespace CommandExtension
 {
-    public class Patches
+    public class HarmonyPatches
     {
         // Pre-patch Player.SendChatMessage(string, string) method.
         // Routes command messages into the command handler and suppresses normal chat when appropriate.
@@ -90,11 +90,7 @@ namespace CommandExtension
             /// <param name="__instance">The Player instance that was initialized.</param>
             static void Postfix(Player __instance)
             {
-                // Only proceed when the feedback-disabled command is deactivated,
-                // meaning command feedback is allowed.
-                int feedbackCmdIndex = Array.FindIndex(Commands.GeneratedCommands, command => command.Name == Commands.CmdPrefix + Commands.CmdFeedbackDisabled);
-
-                if (Commands.GeneratedCommands[feedbackCmdIndex].State == CommandState.Deactivated)
+                if (!Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyFeedbackDisabled))
                 {
                     // On the third initialize call, display a welcome message.
                     if (ranOnceOnPlayerSpawn < 2)
@@ -104,28 +100,29 @@ namespace CommandExtension
                     else if (ranOnceOnPlayerSpawn == 2)
                     {
                         ranOnceOnPlayerSpawn++;
+
+                        // Enable in-game command feature 
+                        if (Player.Instance != null && QuantumConsole.Instance)
+                        {
+                            // Temporarily enable cheats for console initialization.
+                            QuantumConsole.Instance.GenerateCommands = Settings.EnableCheats = true;
+                            QuantumConsole.Instance.Initialize();
+
+                            // Revert the cheat-enable flag after setup.
+                            Settings.EnableCheats = false;
+                        }
+
                         GreetPlayerInChat();
 
                         // In debug mode, turn on test helpers and notify the player.
-                        if (CommandExtension.debug)
+                        if (CommandExtension.DEBUG)
                         {
-                            CommandMethodes.MessageToChat("debug: enable cheat commands".ColorText(Color.magenta));
-                            CommandMethodes.CommandFunction_Jumper();
-                            CommandMethodes.CommandFunction_InfiniteMana();
-                            CommandMethodes.CommandFunction_InfiniteAirSkips();
-                            CommandMethodes.CommandFunction_Pause();
+                            CommandMethodes.MessageToChat("Debug mode".ColorText(Color.magenta));
+                            CommandMethodes.CommandFunction_Jumper(Commands.CmdPrefix + Commands.CmdKeyJumper);
+                            CommandMethodes.CommandFunction_InfiniteMana(Commands.CmdPrefix + Commands.CmdKeyManaInf);
+                            CommandMethodes.CommandFunction_InfiniteAirSkips(Commands.CmdPrefix + Commands.CmdKeyDasher);
+                            CommandMethodes.CommandFunction_Pause(Commands.CmdPrefix + Commands.CmdKeyPause);
                         }
-                    }
-
-                    // Enable in-game command feature 
-                    if (Player.Instance != null && QuantumConsole.Instance)
-                    {
-                        // Temporarily enable cheat registration for console initialization.
-                        QuantumConsole.Instance.GenerateCommands = Settings.EnableCheats = true;
-                        QuantumConsole.Instance.Initialize();
-
-                        // Revert the cheat-enable flag after setup.
-                        Settings.EnableCheats = false;
                     }
                 }
             }
@@ -179,7 +176,7 @@ namespace CommandExtension
             /// </param>
             static bool Prefix(int value)
             {
-                return !CommandMethodes.infAirSkips;
+                return !Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyDasher);
             }
         }
 
@@ -199,7 +196,7 @@ namespace CommandExtension
             static void Postfix(ref Player __instance)
             {
                 // Apply only when jump-over is turned on and noclip is off
-                if (CommandMethodes.jumpOver && !CommandMethodes.noclip) //ignore the wrong turned boolean!
+                if (Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyJumper) && !Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyNoClip)) //ignore the wrong turned boolean!
                 {
                     if (__instance.Grounded)
                     {
@@ -228,7 +225,7 @@ namespace CommandExtension
             static bool Prefix(float mana)
             {
                 // When infMana is true, skip the original UseMana call
-                return !CommandMethodes.infMana;
+                return !Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyManaInf);
             }
         }
 
@@ -246,17 +243,13 @@ namespace CommandExtension
             /// </summary>
             static bool Prefix(ref float __result)
             {
-                // Check for “pause” command activation
-                int pauseCmdIndex = Array.FindIndex(Commands.GeneratedCommands, cmd => cmd.Name == Commands.CmdPrefix + Commands.CmdPause);
-                if (Commands.GeneratedCommands[pauseCmdIndex].State == CommandState.Activated)
+                if (Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyPause))
                 {
                     __result = 0f;      // freeze time
                     return false;       // skip original getter
                 }
 
-                // Check for “custom day speed” command activation
-                int customSpeedIndex = Array.FindIndex(Commands.GeneratedCommands, cmd => cmd.Name == Commands.CmdPrefix + Commands.CmdCustomDaySpeed);
-                if (Commands.GeneratedCommands[customSpeedIndex].State == CommandState.Activated)
+                if (Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyCustomDaySpeed))
                 {
                     __result = CommandMethodes.timeMultiplier;      // apply custom speed multiplier time  
                     return false;                   // skip original getter
@@ -287,7 +280,9 @@ namespace CommandExtension
             {
                 Type[] itemTypes = new Type[] { typeof(NormalItem), typeof(ArmorItem), typeof(FoodItem), typeof(FishItem), typeof(CropItem), typeof(WateringCanItem), typeof(AnimalItem), typeof(PetItem), typeof(ToolItem) };
                 foreach (Type itemType in itemTypes)
+                {
                     yield return AccessTools.Method(itemType, "GetToolTip", new[] { typeof(Tooltip), typeof(int), typeof(bool) });
+                }
             }
         
             /// <summary>
@@ -303,28 +298,10 @@ namespace CommandExtension
                 Database.GetData(__instance.ID(), delegate (ItemData data)
                 {
                     // Print the ID and name in chat when hovering, if enabled
-                    if (CommandMethodes.printOnHover)
+                    if (Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyShowItemIdOnTooltip))
                     {
                         CommandMethodes.MessageToChat($"{data.id} : {data.name}");
                     }
-
-                    //string idLabel = "ID: ".ColorText(Color.magenta) + data.id.ToString().ColorText(Color.magenta) + "\"\n\"";
-                    //
-                    //if (CommandMethodes.appendItemDescWithId)
-                    //{
-                    //    CommandMethodes.MessageToChat("here");
-                    //    // Add the label if it’s not already present
-                    //    if (!data.description.Contains(idLabel))
-                    //    {
-                    //        data.description = idLabel + data.description;
-                    //        CommandMethodes.MessageToChat("done");
-                    //    }
-                    //}
-                    // Remove the label if it exists when feature is off
-                    //else if (data.description.Contains(idLabel))
-                    //{
-                    //    data.description = data.description.Replace(idLabel, "");
-                    //}
                 });
             }
         }
@@ -377,15 +354,15 @@ namespace CommandExtension
                 }
         
                 // Determine if either fill command is active
-                bool cheatFill = Commands.GeneratedCommands.Any(cmd => cmd.Name == Commands.CmdPrefix + Commands.CmdCheatFillMuseum && cmd.State == CommandState.Activated);
-                bool autoFill = Commands.GeneratedCommands.Any(cmd => cmd.Name == Commands.CmdPrefix + Commands.CmdAutoFillMuseum && cmd.State == CommandState.Activated);
+                bool cheatFill = Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyCheatFillMuseum);
+                bool autoFill = Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyAutoFillMuseum);
                 if (!cheatFill && !autoFill)
                 {
                     return;
                 }
 
                 // Ensure a valid player context for auto-fill
-                Player player = CommandMethodes.GetPlayerForCommand();
+                Player player = Player.Instance;
                 if (player.Inventory == null || player.Inventory.Items == null)
                 {
                     return;
@@ -494,8 +471,8 @@ namespace CommandExtension
         /// </summary>
         private static void GreetPlayerInChat()
         {
-            CommandMethodes.MessageToChat("> Command Extension Active!".ColorText(new Color(1F, 0.66F, 0.0F)));
-            CommandMethodes.MessageToChat("     type '!help' for a list of commands.".ColorText(new Color(0.7F, 0.44F, 0.0F)));
+            CommandMethodes.MessageToChat(CommandExtension.GREET.ColorText(CommandExtension.GreetColor));
+            CommandMethodes.MessageToChat(CommandExtension.GREET_INFO.ColorText(CommandExtension.GreetInfoColor));
             //CommandMethodes.CommandFunction_PrintToChat("\n------------------------------------------".ColorText(Color.black));
         }
 
@@ -519,7 +496,7 @@ namespace CommandExtension
                 return false;
             }
 
-            if (CommandMethodes.GetPlayerForCommand() == null)
+            if (Player.Instance == null)
             {
                 // Verify there’s a valid player context before executing commands.
                 // Under normal conditions this should never be null.

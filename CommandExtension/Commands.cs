@@ -9,172 +9,316 @@ namespace CommandExtension
 {
     public static class Commands
     {
-        // Core
+        // Core prefix
         public const string CmdPrefix = "!";
-        public const string CmdDebug = "debug";
-        public const string CmdHelp = "help";
-        public const string CmdState = "state";
-        public const string CmdFeedbackDisabled = "feedback";
-        public const string CmdName = "name";
 
-        // mine related
-        public const string CmdMineReset = "minereset";
-        public const string CmdMineClear = "mineclear";
-        public const string CmdMineOverfill = "mineoverfill";
+        // Debug
+        public const string CmdKeyDebug = "debug";
+        public const string CmdDesDebug = "Debug Methode";
+        public const string CmdUseDebug = CmdPrefix + CmdKeyDebug;
 
-        // time
-        public const string CmdPause = "pause";
-        public const string CmdCustomDaySpeed = "timespeed";
-        public const string CmdSetDate = "time";
-        public const string CmdWeather = "weather";
-        public const string CmdIncDecYear = "years";
-        public const string CmdSetSeason = "season";
+        // Help
+        public const string CmdKeyHelp = "help";
+        public const string CmdDesHelp = "Displays a list of all available commands.";
+        public const string CmdUseHelp = CmdPrefix + CmdKeyHelp;
 
-        // currency
-        public const string CmdMoney = "money";
-        public const string CmdCoins = "coins";
-        public const string CmdOrbs = "orbs";
-        public const string CmdTickets = "tickets";
-        public const string CmdDevKit = "devkit";
+        // State
+        public const string CmdKeyState = "state";
+        public const string CmdDesState = "Shows which commands are currently activated.";
+        public const string CmdUseState = CmdPrefix + CmdKeyState;
 
-        // toggles
-        public const string CmdJumper = "jumper";
-        public const string CmdDasher = "dasher";
-        public const string CmdManaFill = "manafill";
-        public const string CmdManaInf = "manainf";
-        public const string CmdHealthFill = "healthfill";
-        public const string CmdNoHit = "nohit";
-        public const string CmdNoClip = "noclip";
-        public const string CmdUI = "ui";
-        public const string CmdAutoFillMuseum = "autofillmuseum";
-        public const string CmdCheatFillMuseum = "cheatfillmuseum";
-        //public const string CmdFixYear = "yearfix";
-        public const string CmdCheats = "cheats";
+        // Feedback toggle
+        public const string CmdKeyFeedbackDisabled = "feedback";
+        public const string CmdDesFeedbackDisabled = "Toggles chat feedback for command execution.";
+        public const string CmdUseFeedbackDisabled = CmdPrefix + CmdKeyFeedbackDisabled;
 
-        // npc relationship
-        public const string CmdUnMarry = "divorce";
-        public const string CmdMarryNpc = "marry";
-        public const string CmdRelationship = "relationship";
+        // Command target name
+        public const string CmdKeyName = "name";
+        public const string CmdDesName = "Sets or resets the player name that commands will target.";
+        public const string CmdUseName = CmdPrefix + CmdKeyName + " [playerName]*";
 
-        // items
-        public const string CmdGive = "give";
-        public const string CmdShowItems = "items";
-        public const string CmdPrintItemIds = "getitemids";
-        public const string CmdPrintHoverItem = "printhoveritem";
-        public const string CmdAppendItemDescWithId = "showid";
+        // Mine commands
+        public const string CmdKeyMineReset = "minereset";
+        public const string CmdDesMineReset = "Reset the current mine.";
+        public const string CmdUseMineReset = CmdPrefix + CmdKeyMineReset;
 
-        // teleport
-        public const string CmdTeleport = "tp";
-        public const string CmdTeleportLocations = "tps";
+        public const string CmdKeyMineClear = "mineclear";
+        public const string CmdDesMineClear = "Removes all rocks and ores from the mine.";
+        public const string CmdUseMineClear = CmdPrefix + CmdKeyMineClear;
 
-        // misc
-        public const string CmdSleep = "sleep";
+        public const string CmdKeyMineOverfill = "mineoverfill";
+        public const string CmdDesMineOverfill = "Fills the mine completely with rocks and ores.";
+        public const string CmdUseMineOverfill = CmdPrefix + CmdKeyMineOverfill;
 
-        public static Command[] GeneratedCommands = GenerateCommands();
-        private static Command[] GenerateCommands()
-        {
-            Command[] value = new Command[] {
-                new Command(CmdPrefix + CmdHelp,                    "print commands to chat", CommandState.None),
-                new Command(CmdPrefix + CmdMineReset,               "refill all mine shafts!", CommandState.None),
-                new Command(CmdPrefix + CmdPause,                   "toggle time pause!", CommandState.Deactivated),
-                new Command(CmdPrefix + CmdCustomDaySpeed,          "toggle or change dayspeed, paused if '!pause' is activ!", CommandState.Deactivated),
-                new Command(CmdPrefix + CmdMoney,                   "give or remove coins", CommandState.None),
-                new Command(CmdPrefix + CmdOrbs,                    "give or remove Orbs", CommandState.None),
-                new Command(CmdPrefix + CmdTickets,                 "give or remove Tickets", CommandState.None),
-                new Command(CmdPrefix + CmdSetDate,                 "set hour '6-23' e.g. 'set h 12'\nset Day '1-28' e.g. 'set d 12'", CommandState.None),
-                new Command(CmdPrefix + CmdWeather,                 "'!weather [raining|heatwave|clear]'", CommandState.None),
-                new Command(CmdPrefix + CmdDevKit,                  "get dev items", CommandState.None),
-                new Command(CmdPrefix + CmdJumper,                  "jump over object's (actually noclip while jump)", CommandState.Deactivated),
-                new Command(CmdPrefix + CmdState,                   "print activ commands", CommandState.None),
-                new Command(CmdPrefix + CmdSleep,                   "sleep to next the day", CommandState.None),
-                new Command(CmdPrefix + CmdDasher,                  "infinite dashes", CommandState.Deactivated),
-                new Command(CmdPrefix + CmdManaFill,                "mana refill", CommandState.None),
-                new Command(CmdPrefix + CmdManaInf,                 "infinite mana", CommandState.Deactivated),
-                new Command(CmdPrefix + CmdHealthFill,              "health refill", CommandState.None),
-                new Command(CmdPrefix + CmdNoHit,                   "no hit (disable hitbox)", CommandState.Deactivated),
-                new Command(CmdPrefix + CmdMineOverfill,            "fill mine completely with rocks & ores", CommandState.None),
-                new Command(CmdPrefix + CmdMineClear,               "clear mine completely from rocks & ores", CommandState.None),
-                new Command(CmdPrefix + CmdNoClip,                  "walk trough everything", CommandState.Deactivated),
-                new Command(CmdPrefix + CmdName,                    "set name for command target ('!name Lynn') only '!name resets it' ", CommandState.None),
-                new Command(CmdPrefix + CmdFeedbackDisabled,        "toggle command feedback on/off", CommandState.Deactivated),
-                new Command(CmdPrefix + CmdGive,                    "give [ID] [AMOUNT]*",                                                      CommandState.None),
-                new Command(CmdPrefix + CmdShowItems,               "print items with the given name",                                          CommandState.None),
-                new Command(CmdPrefix + CmdPrintItemIds,            "print item ids [xp|money|all|bonus]",                                      CommandState.None),
-                new Command(CmdPrefix + CmdPrintHoverItem,          "print item id to chat",                                                    CommandState.Deactivated),
-                //new Command(CmdPrefix + CmdAppendItemDescWithId,    "toggle id shown to item description",                                      CommandState.Deactivated),
-                new Command(CmdPrefix + CmdAutoFillMuseum,          "toggle museum's auto fill upon entry",                                     CommandState.Deactivated),
-                new Command(CmdPrefix + CmdCheatFillMuseum,         "toggle fill museum completely upon entry",                                 CommandState.Deactivated),
-                new Command(CmdPrefix + CmdUI,                      "turn ui on/off", CommandState.None),
-                new Command(CmdPrefix + CmdTeleport,                "teleport to some locations", CommandState.None),
-                new Command(CmdPrefix + CmdTeleportLocations,       "get teleport locations", CommandState.None),
-                new Command(CmdPrefix + CmdRelationship,            "'!relationship [name/all] [value] [add]*'", CommandState.None),
-                new Command(CmdPrefix + CmdUnMarry,                 "unmarry an NPC '!divorce [name/all]'", CommandState.None),
-                new Command(CmdPrefix + CmdMarryNpc,                "marry an NPC '!marry [name/all]'", CommandState.None),
-                new Command(CmdPrefix + CmdSetSeason,               "change season", CommandState.None),
-                //new Command(CmdPrefix + CmdFixYear,               "fix year (if needed)",                                                     CommandState.Activated),
-                new Command(CmdPrefix + CmdIncDecYear,              "add or sub years '!years [value]' '-' to sub", CommandState.None),
-                new Command(CmdPrefix + CmdCheats,                  "Toggle Cheats and hotkeys like F7,F8", CommandState.Deactivated)
-            };
+        // Time commands
+        public const string CmdKeyPause = "pause";
+        public const string CmdDesPause = "Toggles the game’s time pause on or off.";
+        public const string CmdUsePause = CmdPrefix + CmdKeyPause;
 
-            Array.Sort(value, (x, y) => x.Name.CompareTo(y.Name));
-            return value;
-        }
+        public const string CmdKeyCustomDaySpeed = "timespeed";
+        public const string CmdDesCustomDaySpeed = "Sets or toggles a custom day-length multiplier.";
+        public const string CmdUseCustomDaySpeed = CmdPrefix + CmdKeyCustomDaySpeed + " [multiplier|reset]";
+
+        public const string CmdKeySetDate = "time";
+        public const string CmdDesSetDate = "Sets the current hour or day in the day/night cycle.";
+        public const string CmdUseSetDate = CmdPrefix + CmdKeySetDate + " [h|d] [value]";
+
+        public const string CmdKeyWeather = "weather";
+        public const string CmdDesWeather = "Changes weather to raining, heatwave, or clear.";
+        public const string CmdUseWeather = CmdPrefix + CmdKeyWeather + " [raining|heatwave|clear]";
+
+        public const string CmdKeySetSeason = "season";
+        public const string CmdDesSetSeason = "Changes the current season.";
+        public const string CmdUseSetSeason = CmdPrefix + CmdKeySetSeason + " [Spring|Summer|Fall|Winter]";
+
+        public const string CmdKeyIncDecYear = "years";
+        public const string CmdDesIncDecYear = "Advances or rewinds the in-game year by increments of four months.";
+        public const string CmdUseIncDecYear = CmdPrefix + CmdKeyIncDecYear + " (-)[years]";
+
+        // Currency commands
+        public const string CmdKeyMoney = "money";
+        public const string CmdDesMoney = "Alias for !coins.";
+        public const string CmdUseMoney = CmdPrefix + CmdKeyMoney + " (-)[amount]";
+
+        public const string CmdKeyCoins = "coins";
+        public const string CmdDesCoins = "Adds or subtracts Coins from the player.";
+        public const string CmdUseCoins = CmdPrefix + CmdKeyCoins + " (-)[amount]";
+
+        public const string CmdKeyOrbs = "orbs";
+        public const string CmdDesOrbs = "Adds or subtracts Orbs from the player.";
+        public const string CmdUseOrbs = CmdPrefix + CmdKeyOrbs + " (-)[amount]";
+
+        public const string CmdKeyTickets = "tickets";
+        public const string CmdDesTickets = "Adds or subtracts Tickets from the player.";
+        public const string CmdUseTickets = CmdPrefix + CmdKeyTickets + " (-)[amount]";
+
+        public const string CmdKeyDevKit = "devkit";
+        public const string CmdDesDevKit = "Grants the developer kit items.";
+        public const string CmdUseDevKit = CmdPrefix + CmdKeyDevKit;
+
+        // Player toggles
+        public const string CmdKeyJumper = "jumper";
+        public const string CmdDesJumper = "Toggles ability to jump through objects.";
+        public const string CmdUseJumper = CmdPrefix + CmdKeyJumper;
+
+        public const string CmdKeyDasher = "dasher";
+        public const string CmdDesDasher = "Toggles infinite dash charges.";
+        public const string CmdUseDasher = CmdPrefix + CmdKeyDasher;
+
+        public const string CmdKeyManaFill = "manafill";
+        public const string CmdDesManaFill = "Refills the player’s mana to maximum.";
+        public const string CmdUseManaFill = CmdPrefix + CmdKeyManaFill;
+
+        public const string CmdKeyManaInf = "manainf";
+        public const string CmdDesManaInf = "Toggles infinite mana.";
+        public const string CmdUseManaInf = CmdPrefix + CmdKeyManaInf;
+
+        public const string CmdKeyHealthFill = "healthfill";
+        public const string CmdDesHealthFill = "Refills the player’s health to maximum.";
+        public const string CmdUseHealthFill = CmdPrefix + CmdKeyHealthFill;
+
+        public const string CmdKeyNoHit = "nohit";
+        public const string CmdDesNoHit = "Toggles invincibility (no damage taken).";
+        public const string CmdUseNoHit = CmdPrefix + CmdKeyNoHit;
+
+        public const string CmdKeyNoClip = "noclip";
+        public const string CmdDesNoClip = "Toggles noclip mode (walk through walls).";
+        public const string CmdUseNoClip = CmdPrefix + CmdKeyNoClip;
+
+        // Misc toggles
+        public const string CmdKeyUI = "ui";
+        public const string CmdDesUI = "Toggles the game’s HUD and UI elements.";
+        public const string CmdUseUI = CmdPrefix + CmdKeyUI + " [on|off]*";
+
+        public const string CmdKeyAutoFillMuseum = "autofillmuseum";
+        public const string CmdDesAutoFillMuseum = "Toggles auto-fill of museum bundles on entry.";
+        public const string CmdUseAutoFillMuseum = CmdPrefix + CmdKeyAutoFillMuseum;
+
+        public const string CmdKeyCheatFillMuseum = "cheatfillmuseum";
+        public const string CmdDesCheatFillMuseum = "Toggles cheat-fill of museum bundles on entry.";
+        public const string CmdUseCheatFillMuseum = CmdPrefix + CmdKeyCheatFillMuseum;
+
+        public const string CmdKeyFixYear = "yearfix";
+        public const string CmdDesFixYear = "Toggles corrected year calculation.";
+        public const string CmdUseFixYear = CmdPrefix + CmdKeyFixYear;
+
+        public const string CmdKeyCheats = "cheats";
+        public const string CmdDesCheats = "Toggles the game’s built-in cheats and hotkeys.";
+        public const string CmdUseCheats = CmdPrefix + CmdKeyCheats;
+
+        // NPC relationship
+        public const string CmdKeyUnMarry = "divorce";
+        public const string CmdDesUnMarry = "Divorces a single or all NPCs.";
+        public const string CmdUseUnMarry = CmdPrefix + CmdKeyUnMarry + " [name|all]";
+
+        public const string CmdKeyMarry = "marry";
+        public const string CmdDesMarry = "Marries a single or all NPCs.";
+        public const string CmdUseMarry = CmdPrefix + CmdKeyMarry + " [name|all]";
+
+        public const string CmdKeyRelationship = "relationship";
+        public const string CmdDesRelationship = "Sets or adds to NPC relationship values.";
+        public const string CmdUseRelationship = CmdPrefix + CmdKeyRelationship + " [name|all] [value] [add]*";
+
+        // Items
+        public const string CmdKeyGive = "give";
+        public const string CmdDesGive = "Gives item(s) to the player by ID or name.";
+        public const string CmdUseGive = CmdPrefix + CmdKeyGive + " [ID|name] [amount]";
+
+        public const string CmdKeyShowItems = "items";
+        public const string CmdDesShowItems = "Lists items matching the given name.";
+        public const string CmdUseShowItems = CmdPrefix + CmdKeyShowItems + " [name]";
+
+        public const string CmdKeyPrintCategorizedItems = "getitemids";
+        public const string CmdDesPrintCategorizedItems = "Prints item IDs filtered by category.";
+        public const string CmdUsePrintCategorizedItems = CmdPrefix + CmdKeyPrintCategorizedItems + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]";
+
+        public const string CmdKeyShowItemIdOnHover = "showidonhover";
+        public const string CmdDesShowItemIdOnHover = "Displays the item ID when hovering.";
+        public const string CmdUseShowItemIdOnHover = CmdPrefix + CmdKeyShowItemIdOnHover;
+
+        public const string CmdKeyShowItemIdOnTooltip = "showid";
+        public const string CmdDesShowItemIdOnTooltip = "Toggles showing item IDs in tooltips.";
+        public const string CmdUseShowItemIdOnTooltip = CmdPrefix + CmdKeyShowItemIdOnTooltip;
+
+        // Teleport
+        public const string CmdKeyTeleport = "tp";
+        public const string CmdDesTeleport = "Teleports the player to a location.";
+        public const string CmdUseTeleport = CmdPrefix + CmdKeyTeleport + " [location]";
+
+        public const string CmdKeyTeleportLocations = "tps";
+        public const string CmdDesTeleportLocations = "Lists all available teleport destinations.";
+        public const string CmdUseTeleportLocations = CmdPrefix + CmdKeyTeleportLocations;
+
+        // Sleep
+        public const string CmdKeySleep = "sleep";
+        public const string CmdDesSleep = "Sleeps through the night.";
+        public const string CmdUseSleep = CmdPrefix + CmdKeySleep;
+
+        public static readonly Dictionary<string, Command> GeneratedCommands = new Dictionary<string, Command>() {
+            // Debug
+            { CmdPrefix + CmdKeyDebug,              new Command(CmdPrefix + CmdKeyDebug,                  CmdDesDebug,                CmdUseDebug,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Debug(commandInput)) },
+
+            // Help
+            { CmdPrefix + CmdKeyHelp,               new Command(CmdPrefix + CmdKeyHelp,                   CmdDesHelp,                 CmdUseHelp,                 CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Help(commandInput)) },
+
+            // State
+            { CmdPrefix + CmdKeyState,              new Command(CmdPrefix + CmdKeyState,                  CmdDesState,                CmdUseState,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_State(commandInput)) },
+
+            // Feedback toggle
+            { CmdPrefix + CmdKeyFeedbackDisabled,   new Command(CmdPrefix + CmdKeyFeedbackDisabled,       CmdDesFeedbackDisabled,     CmdUseFeedbackDisabled,     CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_ToggleFeedback(commandInput)) },
+
+            // Command target name
+            { CmdPrefix + CmdKeyName,               new Command(CmdPrefix + CmdKeyName,                   CmdDesName,                 CmdUseName,                 CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_SetName(commandInput)) },
+
+            // Mine commands
+            { CmdPrefix + CmdKeyMineReset,          new Command(CmdPrefix + CmdKeyMineReset,              CmdDesMineReset,            CmdUseMineReset,            CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ResetMines(commandInput)) },
+            { CmdPrefix + CmdKeyMineOverfill,       new Command(CmdPrefix + CmdKeyMineOverfill,           CmdDesMineOverfill,         CmdUseMineOverfill,         CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_OverfillMines(commandInput)) },
+            { CmdPrefix + CmdKeyMineClear,          new Command(CmdPrefix + CmdKeyMineClear,              CmdDesMineClear,            CmdUseMineClear,            CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ClearMines(commandInput)) },
+
+            // Time commands
+            { CmdPrefix + CmdKeyPause,              new Command(CmdPrefix + CmdKeyPause,                  CmdDesPause,                CmdUsePause,                CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_Pause(commandInput)) },
+            { CmdPrefix + CmdKeyCustomDaySpeed,     new Command(CmdPrefix + CmdKeyCustomDaySpeed,         CmdDesCustomDaySpeed,       CmdUseCustomDaySpeed,       CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_CustomDaySpeed(commandInput)) },
+            { CmdPrefix + CmdKeySetDate,            new Command(CmdPrefix + CmdKeySetDate,                CmdDesSetDate,              CmdUseSetDate,              CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ChangeDate(commandInput)) },
+            { CmdPrefix + CmdKeyWeather,            new Command(CmdPrefix + CmdKeyWeather,                CmdDesWeather,              CmdUseWeather,              CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ChangeWeather(commandInput)) },
+            { CmdPrefix + CmdKeySetSeason,          new Command(CmdPrefix + CmdKeySetSeason,              CmdDesSetSeason,            CmdUseSetSeason,            CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_SetSeason(commandInput)) },
+            { CmdPrefix + CmdKeyIncDecYear,         new Command(CmdPrefix + CmdKeyIncDecYear,             CmdDesIncDecYear,           CmdUseIncDecYear,           CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Year(commandInput)) },
+          //{ CmdPrefix + CmdFixYear,               new Command(CmdDesYear,                 CmdUseYear,                 CommandState.Activated),
+
+            // Currency commands
+            { CmdPrefix + CmdKeyMoney,              new Command(CmdPrefix + CmdKeyMoney,                  CmdDesMoney,                CmdUseMoney,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_AddMoney(commandInput)) },
+            { CmdPrefix + CmdKeyCoins,              new Command(CmdPrefix + CmdKeyCoins,                  CmdDesCoins,                CmdUseCoins,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_AddMoney(commandInput)) },
+            { CmdPrefix + CmdKeyOrbs,               new Command(CmdPrefix + CmdKeyOrbs,                   CmdDesOrbs,                 CmdUseOrbs,                 CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_AddOrbs(commandInput)) },
+            { CmdPrefix + CmdKeyTickets,            new Command(CmdPrefix + CmdKeyTickets,                CmdDesTickets,              CmdUseTickets,              CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_AddTickets(commandInput)) },
+
+            // Player
+            { CmdPrefix + CmdKeySleep,              new Command(CmdPrefix + CmdKeySleep,                  CmdDesSleep,                CmdUseSleep,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Sleep(commandInput)) },
+            { CmdPrefix + CmdKeyManaFill,           new Command(CmdPrefix + CmdKeyManaFill,               CmdDesManaFill,             CmdUseManaFill,             CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ManaFill(commandInput)) },
+            { CmdPrefix + CmdKeyManaInf,            new Command(CmdPrefix + CmdKeyManaInf,                CmdDesManaInf,              CmdUseManaInf,              CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_InfiniteMana(commandInput)) },
+            { CmdPrefix + CmdKeyHealthFill,         new Command(CmdPrefix + CmdKeyHealthFill,             CmdDesHealthFill,           CmdUseHealthFill,           CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_HealthFill(commandInput)) },
+            { CmdPrefix + CmdKeyNoHit,              new Command(CmdPrefix + CmdKeyNoHit,                  CmdDesNoHit,                CmdUseNoHit,                CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_NoHit(commandInput)) },
+            { CmdPrefix + CmdKeyNoClip,             new Command(CmdPrefix + CmdKeyNoClip,                 CmdDesNoClip,               CmdUseNoClip,               CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_NoClip(commandInput)) },
+            { CmdPrefix + CmdKeyJumper,             new Command(CmdPrefix + CmdKeyJumper,                 CmdDesJumper,               CmdUseJumper,               CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_Jumper(commandInput)) },
+            { CmdPrefix + CmdKeyDasher,             new Command(CmdPrefix + CmdKeyDasher,                 CmdDesDasher,               CmdUseDasher,               CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_InfiniteAirSkips(commandInput)) },
+
+            // Misc
+            { CmdPrefix + CmdKeyAutoFillMuseum,     new Command(CmdPrefix + CmdKeyAutoFillMuseum,         CmdDesAutoFillMuseum,       CmdUseAutoFillMuseum,       CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_AutoFillMuseum(commandInput)) },
+            { CmdPrefix + CmdKeyCheatFillMuseum,    new Command(CmdPrefix + CmdKeyCheatFillMuseum,        CmdDesCheatFillMuseum,      CmdUseCheatFillMuseum,      CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_CheatFillMuseum(commandInput)) },
+            { CmdPrefix + CmdKeyUI,                 new Command(CmdPrefix + CmdKeyUI,                     CmdDesUI,                   CmdUseUI,                   CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ToggleUI(commandInput)) },
+            { CmdPrefix + CmdKeyCheats,             new Command(CmdPrefix + CmdKeyCheats,                 CmdDesCheats,               CmdUseCheats,               CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_ToggleCheats(commandInput)) },
+
+            // NPC relationship
+            { CmdPrefix + CmdKeyRelationship,       new Command(CmdPrefix + CmdKeyRelationship,           CmdDesRelationship,         CmdUseRelationship,         CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Relationship(commandInput)) },
+            { CmdPrefix + CmdKeyUnMarry,            new Command(CmdPrefix + CmdKeyUnMarry,                CmdDesUnMarry,              CmdUseUnMarry,              CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_UnMarry(commandInput)) },
+            { CmdPrefix + CmdKeyMarry,              new Command(CmdPrefix + CmdKeyMarry,                  CmdDesMarry,                CmdUseMarry,                CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_Marry(commandInput)) },
+
+            // Items
+            { CmdPrefix + CmdKeyGive,               new Command(CmdPrefix + CmdKeyGive,                   CmdDesGive,                 CmdUseGive,                 CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_GiveItemByIdOrName(commandInput)) },
+            { CmdPrefix + CmdKeyShowItems,          new Command(CmdPrefix + CmdKeyShowItems,              CmdDesShowItems,            CmdUseShowItems,            CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_ShowID(commandInput)) },
+            { CmdPrefix + CmdKeyPrintCategorizedItems,       new Command(CmdPrefix + CmdKeyPrintCategorizedItems,           CmdDesPrintCategorizedItems,         CmdUsePrintCategorizedItems,         CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_PrintItemIds(commandInput)) },
+            { CmdPrefix + CmdKeyShowItemIdOnHover,  new Command(CmdPrefix + CmdKeyShowItemIdOnHover,      CmdDesShowItemIdOnHover,    CmdUseShowItemIdOnHover,    CommandState.Deactivated, (string commandInput) => CommandMethodes.CommandFunction_PrintItemIdOnHover(commandInput)) },
+          //{ CmdPrefix + CmdAppendItemDescWithId,  new Command(CmdPrefix + CmdAppendItemDescWithId,      CmdDesendItemDescWithId,    CmdUseendItemDescWithId,    CommandState.Deactivated),
+            { CmdPrefix + CmdKeyDevKit,             new Command(CmdPrefix + CmdKeyDevKit,                 CmdDesDevKit,               CmdUseDevKit,               CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_GiveDevItems(commandInput)) },
+
+            // Teleport
+            { CmdPrefix + CmdKeyTeleport,           new Command(CmdPrefix + CmdKeyTeleport,               CmdDesTeleport,             CmdUseTeleport,             CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_TeleportToScene(commandInput)) },
+            { CmdPrefix + CmdKeyTeleportLocations,  new Command(CmdPrefix + CmdKeyTeleportLocations,      CmdDesTeleportLocations,    CmdUseTeleportLocations,    CommandState.None,        (string commandInput) => CommandMethodes.CommandFunction_TeleportLocations(commandInput)) }
+        };
 
         public static void ProcessCommands(string commandInput)
         {
-            string[] mayCommandParam = commandInput.Split(' ');
-            string cmd = mayCommandParam[0];
+            string commandKey = commandInput.Split(' ')[0];
             
-            Action action = cmd switch
+            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
             {
-                CmdPrefix + CmdDebug => () => CommandMethodes.CommandFunction_Debug(mayCommandParam),
-                CmdPrefix + CmdHelp => () => CommandMethodes.CommandFunction_Help(),
-                CmdPrefix + CmdState => () => CommandMethodes.CommandFunction_Help(true),
-                CmdPrefix + CmdFeedbackDisabled => () => CommandMethodes.CommandFunction_ToggleFeedback(),
-                CmdPrefix + CmdMineReset => () => CommandMethodes.CommandFunction_ResetMines(),
-                CmdPrefix + CmdPause => () => CommandMethodes.CommandFunction_Pause(),
-                CmdPrefix + CmdCustomDaySpeed => () => CommandMethodes.CommandFunction_CustomDaySpeed(commandInput),
-                CmdPrefix + CmdMoney => () => CommandMethodes.CommandFunction_AddMoney(commandInput),
-                CmdPrefix + CmdCoins => () => CommandMethodes.CommandFunction_AddMoney(commandInput),
-                CmdPrefix + CmdOrbs => () => CommandMethodes.CommandFunction_AddOrbs(commandInput),
-                CmdPrefix + CmdTickets => () => CommandMethodes.CommandFunction_AddTickets(commandInput),
-                CmdPrefix + CmdSetDate => () => CommandMethodes.CommandFunction_ChangeDate(commandInput),
-                CmdPrefix + CmdWeather => () => CommandMethodes.CommandFunction_ChangeWeather(commandInput),
-                CmdPrefix + CmdDevKit => () => CommandMethodes.CommandFunction_GiveDevItems(),
-                CmdPrefix + CmdJumper => () => CommandMethodes.CommandFunction_Jumper(),
-                CmdPrefix + CmdCheats => () => CommandMethodes.CommandFunction_ToggleCheats(),
-                CmdPrefix + CmdSleep => () => CommandMethodes.CommandFunction_Sleep(),
-                CmdPrefix + CmdDasher => () => CommandMethodes.CommandFunction_InfiniteAirSkips(),
-                CmdPrefix + CmdManaFill => () => CommandMethodes.CommandFunction_ManaFill(),
-                CmdPrefix + CmdManaInf => () => CommandMethodes.CommandFunction_InfiniteMana(),
-                CmdPrefix + CmdHealthFill => () => CommandMethodes.CommandFunction_HealthFill(),
-                CmdPrefix + CmdNoHit => () => CommandMethodes.CommandFunction_NoHit(),
-                CmdPrefix + CmdMineOverfill => () => CommandMethodes.CommandFunction_OverfillMines(),
-                CmdPrefix + CmdMineClear => () => CommandMethodes.CommandFunction_ClearMines(),
-                CmdPrefix + CmdNoClip => () => CommandMethodes.CommandFunction_NoClip(),
-                CmdPrefix + CmdPrintHoverItem => () => CommandMethodes.CommandFunction_PrintItemIdOnHover(),
-                CmdPrefix + CmdName => () => CommandMethodes.CommandFunction_SetName(commandInput),
-                CmdPrefix + CmdGive => () => CommandMethodes.CommandFunction_GiveItemByIdOrName(mayCommandParam),
-                CmdPrefix + CmdShowItems => () => CommandMethodes.CommandFunction_ShowItemByName(mayCommandParam),
-                CmdPrefix + CmdPrintItemIds => () => CommandMethodes.CommandFunction_PrintItemIds(mayCommandParam),
-                CmdPrefix + CmdAutoFillMuseum => () => CommandMethodes.CommandFunction_AutoFillMuseum(),
-                CmdPrefix + CmdCheatFillMuseum => () => CommandMethodes.CommandFunction_CheatFillMuseum(),
-                CmdPrefix + CmdUI => () => CommandMethodes.CommandFunction_ToggleUI(commandInput),
-                CmdPrefix + CmdTeleport => () => CommandMethodes.CommandFunction_TeleportToScene(mayCommandParam),
-                CmdPrefix + CmdTeleportLocations => () => CommandMethodes.CommandFunction_TeleportLocations(),
-                CmdPrefix + CmdAppendItemDescWithId => () => CommandMethodes.CommandFunction_ShowID(),
-                CmdPrefix + CmdRelationship => () => CommandMethodes.CommandFunction_Relationship(mayCommandParam),
-                CmdPrefix + CmdUnMarry => () => CommandMethodes.CommandFunction_UnMarry(mayCommandParam),
-                CmdPrefix + CmdMarryNpc => () => CommandMethodes.CommandFunction_MarryNPC(mayCommandParam),
-                CmdPrefix + CmdSetSeason => () => CommandMethodes.CommandFunction_SetSeason(mayCommandParam),
-                CmdPrefix + CmdIncDecYear => () => CommandMethodes.CommandFunction_Year(commandInput),
-                //CmdPrefix + CmdFixYear => () => CommandMethodes.CommandFunction_ToggleYearFix(),
+                command.Invoke(commandInput);
+            }
 
-                // default: unknown command, no-op
-                _ => () => { }
-            };
+        }
 
-            action();
+        public static Command GetCommandByKey(string commandKey)
+        {
+            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
+            {
+                return command;
+            }
+
+            return null;
+        }
+
+        public static bool IsCommandActive(string commandKey)
+        {
+            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
+            {
+                return command.State == CommandState.Activated;
+            }
+
+            return false;
+        }
+
+        public static bool ToggleCommandState(string commandKey)
+        {
+            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
+            {
+                return (command.State = (command.State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated)) == CommandState.Activated;
+            }
+
+            return false;
+        }
+
+        public static void SetCommandState(string commandKey, CommandState commandState)
+        {
+            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
+            {
+                command.State = commandState;
+            }
+        }
+
+        public static void SetCommandState(string commandKey, bool activate)
+        {
+            if (GeneratedCommands.TryGetValue(commandKey, out Command command))
+            {
+                command.State = activate ? CommandState.Activated : CommandState.Deactivated;
+            }
         }
     }
 }

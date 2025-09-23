@@ -26,9 +26,17 @@ namespace CommandExtension
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public partial class CommandExtension : BaseUnityPlugin
     {
-        // debug var's
-        public const bool debug = true;
-        public const bool debugLog = debug && true;
+        public const string GREET = "> Command Extension Active!";
+        public const string GREET_INFO = "     type '!help' for a list of commands.";
+        public const string MESSAGE_GAP = "  -  ";
+        public const bool DEBUG = true;
+        public const bool DEBUG_LOG = DEBUG && true;
+
+        public static Color GreetColor = new Color(1F, 0.66F, 0.0F);
+        public static Color GreetInfoColor = new Color(0.7F, 0.44F, 0.0F);
+        public static Color RedColor = new Color(255, 0, 0);
+        public static Color GreenColor = new Color(0, 255, 0);
+        public static Color YellowColor = new Color(240, 240, 0);
 
         private void Awake()
         {
