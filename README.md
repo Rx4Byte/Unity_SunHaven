@@ -1,10 +1,34 @@
-﻿# Sun Haven Mod Collection
-This repository contains mods for the game **Sunhaven**.
+﻿<div align="center">
+	<!--
+	<a href="https://github.com/Rx4Byte/Athena">
+    	<img src="resources/assets/logo.png" alt="Logo" width="128" height="128">
+  	</a>
+	-->
+   	<h3 align="center">Sun Haven Mod Collection</h3>
+	<p align="center">
+		This repository contains mods for the game Sunhaven.
+    	<br/>
+    	<!--<a href="https://github.com/Rx4Byte/Athena"><strong>Explore the docs »</strong></a>
+    	<br />
+    	<br />-->
+    	<!-- TODO: add demo screenshots
+    	<a href="https://github.com/">View Demo</a>
+    	·-->
+    	<a href="https://github.com/Rx4Byte/Unity_SunHaven/issues">Report Bug</a>
+    	·									
+    	<a href="https://github.com/Rx4Byte/Unity_SunHaven/issues">Request Feature</a>
+		<!--								
+    	·									
+    	<a href="https://github.com/Rx4Byte/Unity_SunHaven/issues">Star Athena</a>
+		-->
+  	</p>
+</div>
 
 <!-- Table of Contents -->
 <ol>
 	<li><a href="#mod-collection">Mod Collection</a></li>
 	<li><a href="#development-setup">Development Setup</a></li>
+	<!--
 	<li><a href="#contributing">Contributing</a>
 		<ul>
 			<li><a href="#opening-an-issue">Opening an Issue</a>
@@ -18,6 +42,7 @@ This repository contains mods for the game **Sunhaven**.
 			<li><a href="#pull-request">Pull Request</a></li>
 		</ul>
 	</li>
+	-->
 	<!--<li><a href="#chat-discussion">Chat & Discussion</a></li>-->
 </ol>
 
