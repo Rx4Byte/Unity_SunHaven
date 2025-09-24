@@ -1,27 +1,44 @@
 ﻿# Sun Haven Mod Collection
 This repository contains mods for the game **Sunhaven**.
 
-## Containing Mods
-* **[Command Extension](#command-extension)**: This mod adds a variety of new console commands.
-* **[AutoFill Museum](#autofill-museum)**: This mod that adds a Quality of Life feature to the game by automatically filling the museum upon entry.
-* **[Controller Input Disabler](#controller-input-disabler)**: This mod disables direct controller inputs to be able to use any remapper for controller.
+<!-- Table of Contents -->
+<ol>
+	<li><a href="#mod-collection">Mod Collection</a></li>
+	<li><a href="#development-setup">Development Setup</a></li>
+	<li><a href="#contributing">Contributing</a>
+		<ul>
+			<li><a href="#opening-an-issue">Opening an Issue</a>
+				<ul>
+					<li><a href="#-bug-report">🐛 Bug Report</a></li>
+					<li><a href="#-feature-request">💡 Feature Request</a></li>
+					<li><a href="#-suggestion">💬 Suggestion</a></li>
+					<li><a href="#-question">❓ Question</a></li>
+				</ul>
+			</li>
+			<li><a href="#pull-request">Pull Request</a></li>
+		</ul>
+	</li>
+	<!--<li><a href="#chat-discussion">Chat & Discussion</a></li>-->
+</ol>
 
-## Command Extension
+## Mod collection
+* **[Command Extension](#command-extension)**: This mod adds a variety of new console commands.  
+* **[AutoFill Museum](#autofill-museum)**: This mod adds a quality-of-life feature by automatically filling the museum upon entry.  
+* **[Controller Input Disabler](#controller-input-disabler)**: This mod disables direct controller inputs so you can use any controller remapper.
+
+### Command Extension
 This mod is designed to enhance your gaming experience by allowing you to enter commands directly into the game’s chat box.  
-It operates alongside the game’s existing command system, but with its own unique command prefix.  
+It operates alongside the game’s existing command system but uses its own command prefix `!`.  
+*Note: Messages starting with a single `!` will not be sent to other players.*
 
-- **How to use Commands**:  
-  Commands are entered using the Chat-Box.
-  Open the Chat (Enter-key by default) and type e.g. `!help` for a list of Commands.
+- **How to use commands**: Commands are entered using the chat box.  
+  Open chat (Enter by default) and type the command prefix `!` followed by a command, e.g. `!help` for a list of commands.
 
-### Commands
+#### List of Commands
 ```
 ℹ️ Command Parameters with a star (*) are optional, e.g. [amount]*
 ```
 - **Core Commands**
-	- `CmdPrefix` ➜ `!`  
-	  The command prefix used for all commands.
-	
 	- `help` ➜ `!help`  
 	  Displays a list of all available commands.
 	
@@ -147,12 +164,32 @@ It operates alongside the game’s existing command system, but with its own uni
 	- `cheats` ➜ `!cheats`  
 	  Toggles the game’s built-in cheats and hotkeys.
 
-## AutoFill Museum
+### AutoFill Museum
 This standalone mod adds a Quality of Life feature to the game by automatically filling the museum upon entry.  
 The QoL addition eliminates the need for manual placement of items in the museum.  
 Simply **walk into the museum with the necessary items in your inventory**, and watch as it fills up!
 
-## Controller Input Disabler
+### Controller Input Disabler
 This mod disables direct controller inputs, allowing you to use any remapper for your controller.  
 It provides you with the freedom to customize your controller settings as per your preferences.  
 With this, you're no longer limited by the game's default controller settings.
+
+## Development Setup
+### Dependencies
+Create a folder at the repository root named `.dependencies` *(git-ignored)* and copy required DLLs there.  
+**The files required vary by project**, you can either copy all files from the game's Managed folder (e.g. 'Sun Haven_Data\Managed') or only the DLLs referenced by the projects.
+
+- **Game DLLs** (from 'Game\Game_Data\Managed')
+	+ UnityEngine.dll
+	+ UnityEngine.CoreModule.dll
+
+- **BepInEx** (Mod Loader)
+	+ BepInEx.dll
+
+- **Harmony** (Run-time Patching)
+	+ 0Harmony.dll
+
+### Setup Steps
+1. Clone the repository.
+2. Create the `.dependencies` folder at the solution root.
+3. Copy [required DLLs](#required-files) from your Sun Haven game install and/or BepInEx into `.dependencies`.
