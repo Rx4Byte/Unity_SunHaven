@@ -18,57 +18,59 @@ namespace ControllerBypass
     {
         private void Awake() => Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
 
-        [HarmonyPatch(typeof(Input), "GetButton")]
-        class Patch_GetButton
+		[HarmonyPatch(typeof(Input), "GetButton")]
+		public class Patch_GetButton
         {
-            static bool Prefix(string buttonName, ref bool __result)
+			public static bool Prefix(string buttonName, ref bool __result)
             {
                 return __result = false;
             }
         }
 
         [HarmonyPatch(typeof(Input), "GetButtonDown")]
-        class Patch_GetButtonDown
+		public class Patch_GetButtonDown
         {
-            static bool Prefix(string buttonName, ref bool __result)
+			public static bool Prefix(string buttonName, ref bool __result)
             {
                 return __result = false;
             }
         }
 
         [HarmonyPatch(typeof(Input), "GetButtonUp")]
-        class Patch_GetButtonUp
+		public class Patch_GetButtonUp
         {
-            static bool Prefix(string buttonName, ref bool __result)
+			public static bool Prefix(string buttonName, ref bool __result)
             {
                 return __result = false;
             }
         }
 
         [HarmonyPatch(typeof(Input), "GetAxis")]
-        class Patch_GetAxis
+		public class Patch_GetAxis
         {
-            static bool Prefix(string axisName, ref float __result)
+			public static bool Prefix(string axisName, ref float __result)
             {
                 if (axisName != "Mouse ScrollWheel")
                 {
                     __result = 0f;
                     return false;
                 }
+
                 return true;
             }
         }
 
         [HarmonyPatch(typeof(Input), "GetAxisRaw")]
-        class Patch_GetAxisRaw
+		public class Patch_GetAxisRaw
         {
-            static bool Prefix(string axisName, ref float __result)
+			public static bool Prefix(string axisName, ref float __result)
             {
                 if (axisName != "Mouse ScrollWheel")
                 {
                     __result = 0f;
                     return false;
                 }
+
                 return true;
             }
         }
