@@ -99,32 +99,32 @@ It operates alongside the game’s existing command system but uses its own comm
 	- `pause` ➜ `!pause`  
 	  Toggles the game’s time pause on or off.
 	
-	- `timespeed` ➜ `!timespeed` `[multiplier] or reset/default`  
+	- `timespeed` ➜ `!timespeed` `<multiplier> | reset | default`  
 	  Sets or toggles a custom day-length multiplier.
 	
-	- `time` ➜ `!time` `hour|day` `[value]`  
+	- `time` ➜ `!time` `[hour | day] <value>`  
 	  Sets the current hour or day in the day/night cycle.
 	
-	- `weather` ➜ `!weather` `raining|heatwave|clear`  
+	- `weather` ➜ `!weather` `raining | heatwave | clear`  
 	  Changes weather to raining, heatwave, or clear.
 	
-	- `season` ➜ `!season` `spring|summer|fall|winter`  
+	- `season` ➜ `!season` `spring | summer | fall | winter`  
 	  Changes the current season.
 	
-	- `years` ➜ `!years` `-*` `[amount]`  
+	- `years` ➜ `!years` `-* <amount>`  
 	  Increase or Decrease the Year.
 
 - **Currency Commands**
-	- `money` ➜ `!money` `-*` `[amount]`  
+	- `money` ➜ `!money` `-* <amount>`  
 	  Alias for `!coins`.
 	
-	- `coins` ➜ `!coins` `-*` `[amount]`  
+	- `coins` ➜ `!coins` `-* <amount>`  
 	  Adds or subtracts Coins from the player.
 	
-	- `orbs` ➜ `!orbs` `-*` `[amount]`  
+	- `orbs` ➜ `!orbs` `-* <amount>`  
 	  Adds or subtracts Orbs from the player.
 	
-	- `tickets` ➜ `!tickets` `-*` `[amount]`  
+	- `tickets` ➜ `!tickets` `-* <amount>`  
 	  Adds or subtracts Tickets from the player.
 	
 	- `devkit` ➜ `!devkit`  
@@ -141,23 +141,23 @@ It operates alongside the game’s existing command system but uses its own comm
 	  Fills the mine completely with rocks and ores.
 
 - **Relationship Commands**
-	- `relationship` ➜ `!relationship` `[name] or all` `[value]`  
+	- `relationship` ➜ `!relationship` `[<name> | all] <value>`  
 	  Sets or adds to NPC relationship values.
 	
-	- `marry` ➜ `!marry` `[name] or all`  
+	- `marry` ➜ `!marry` `<name> | all`  
 	  Marries a single or all NPCs.
 	
-	- `divorce` ➜ `!divorce` `[name] or all`  
+	- `divorce` ➜ `!divorce` `<name> | all`  
 	  Divorces a single or all NPCs.
 
 - **Item Commands**
-	- `give` ➜ `!give` `[id|name]` `[amount]*`  
+	- `give` ➜ `!give` `<id | name>` `amount*`  
 	  Gives item(s) to the player by ID or name.
 	
-	- `list` ➜ `!list [name]`  
+	- `list` ➜ `!list <name>`  
 	  Lists items matching the given name.
 	
-	- `items` ➜ `!items` `[xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]` `get*` `[amount]*`  
+	- `items` ➜ `!items` `xp | currency | bonus | pet | decoration | armor | tool | food | crop | fish | normal]` `[get <amount>]*`  
 	  Show or give items filtered by category.
 	
 	- ~~`showid` ➜ `!showid`~~  
@@ -167,14 +167,14 @@ It operates alongside the game’s existing command system but uses its own comm
 	  Show the item ID in chat when hovering.
 
 - **Teleport Commands**
-	- `tp` ➜ `!tp` `[location]`  
+	- `tp` ➜ `!tp` `<location>`  
 	  Teleports the player to a location.
 	
 	- `tps` ➜ `!tps`  
 	  Lists all available teleport destinations.
 
 - **Misc Commands**
-	- `ui` ➜ `!ui` `on|off*`  
+	- `ui` ➜ `!ui` `[on | off]*`  
 	  Toggles the game’s HUD and UI elements.
 	
 	- `autofillmuseum` ➜ `!autofillmuseum`  
