@@ -16,7 +16,10 @@ namespace ControllerBypass
 	[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public partial class ControllerBypass : BaseUnityPlugin
     {
-        private void Awake() => Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
+		private void Awake()
+		{
+			_ = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
+		}
 
 		[HarmonyPatch(typeof(Input), "GetButton")]
 		public class Patch_GetButton
