@@ -19,132 +19,132 @@ It operates alongside the game’s existing command system, but with its own uni
 ℹ️ Command Parameters with a star (*) are optional, e.g. [amount]*
 ```
 - **Core Commands**
-	- `CmdPrefix`: `!`  
+	- `CmdPrefix` ➜ `!`  
 	  The command prefix used for all commands.
 	
-	- `help`: `!help`  
+	- `help` ➜ `!help`  
 	  Displays a list of all available commands.
 	
-	- `state`: `!state`  
+	- `state` ➜ `!state`  
 	  Shows which commands are currently activated.
 
 - **Player Commands**
-	- `jumper`: `!jumper`  
+	- `jumper` ➜ `!jumper`  
 	  Toggles ability to jump through objects.
 	
-	- `dasher`: `!dasher`  
+	- `dasher` ➜ `!dasher`  
 	  Toggles infinite dash charges.
 	
-	- `manafill`: `!manafill`  
+	- `manafill` ➜ `!manafill`  
 	  Refills the player’s mana to maximum.
 	
-	- `manainf`: `!manainf`  
+	- `manainf` ➜ `!manainf`  
 	  Toggles infinite mana.
 	
-	- `healthfill`: `!healthfill`  
+	- `healthfill` ➜ `!healthfill`  
 	  Refills the player’s health to maximum.
 	
-	- `nohit`: `!nohit`  
+	- `nohit` ➜ `!nohit`  
 	  Toggles invincibility (no damage taken).
 	
-	- `noclip`: `!noclip`  
+	- `noclip` ➜ `!noclip`  
 	  Toggles noclip mode (walk through walls).
 	
-	- `sleep`: `!sleep`  
+	- `sleep` ➜ `!sleep`  
 	  Sleeps through the night.
 
 - **Time Commands**
-	- `pause`: `!pause`  
+	- `pause` ➜ `!pause`  
 	  Toggles the game’s time pause on or off.
 	
-	- `timespeed`: `!timespeed [multiplier|reset]`  
+	- `timespeed` ➜ `!timespeed` `[multiplier] or reset/default`  
 	  Sets or toggles a custom day-length multiplier.
 	
-	- `time`: `!time [h|d] [value]`  
+	- `time` ➜ `!time` `hour|day` `[value]`  
 	  Sets the current hour or day in the day/night cycle.
 	
-	- `weather`: `!weather [raining|heatwave|clear]`  
+	- `weather` ➜ `!weather` `raining|heatwave|clear`  
 	  Changes weather to raining, heatwave, or clear.
 	
-	- `season`: `!season [Spring|Summer|Fall|Winter]`  
+	- `season` ➜ `!season` `spring|summer|fall|winter`  
 	  Changes the current season.
 	
-	- `years`: `!years (-)[years]`  
+	- `years` ➜ `!years` `-*` `[amount]`  
 	  Increase or Decrease the Year.
 
 - **Currency Commands**
-	- `money`: `!money (-)[amount]`  
+	- `money` ➜ `!money` `-*` `[amount]`  
 	  Alias for `!coins`.
 	
-	- `coins`: `!coins (-)[amount]`  
+	- `coins` ➜ `!coins` `-*` `[amount]`  
 	  Adds or subtracts Coins from the player.
 	
-	- `orbs`: `!orbs (-)[amount]`  
+	- `orbs` ➜ `!orbs` `-*` `[amount]`  
 	  Adds or subtracts Orbs from the player.
 	
-	- `tickets`: `!tickets (-)[amount]`  
+	- `tickets` ➜ `!tickets` `-*` `[amount]`  
 	  Adds or subtracts Tickets from the player.
 	
-	- `devkit`: `!devkit`  
+	- `devkit` ➜ `!devkit`  
 	  Grants the developer kit items.
 
 - **Mine Commands**
-	- `minereset`: `!minereset`  
+	- `minereset` ➜ `!minereset`  
 	  Reset the current mine.
 	
-	- `mineclear`: `!mineclear`  
+	- `mineclear` ➜ `!mineclear`  
 	  Removes all rocks and ores from the mine.
 	
-	- `mineoverfill`: `!mineoverfill`  
+	- `mineoverfill` ➜ `!mineoverfill`  
 	  Fills the mine completely with rocks and ores.
 
 - **Relationship Commands**
-	- `relationship`: `!relationship [name|all] [value] [add]*`  
+	- `relationship` ➜ `!relationship` `[name] or all` `[value]`  
 	  Sets or adds to NPC relationship values.
 	
-	- `marry`: `!marry [name|all]`  
+	- `marry` ➜ `!marry` `[name] or all`  
 	  Marries a single or all NPCs.
 	
-	- `divorce`: `!divorce [name|all]`  
+	- `divorce` ➜ `!divorce` `[name] or all`  
 	  Divorces a single or all NPCs.
 
 - **Item Commands**
-	- `give`: `!give [ID|name] [amount]*`  
+	- `give` ➜ `!give` `[id|name]` `[amount]*`  
 	  Gives item(s) to the player by ID or name.
 	
-	- `list`: `!list [name]`  
+	- `list` ➜ `!list [name]`  
 	  Lists items matching the given name.
 	
-	- `items`: `!items [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal] [get]* [amount]*`  
+	- `items` ➜ `!items` `[xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]` `get*` `[amount]*`  
 	  Show or give items filtered by category.
 	
-	- ~~`showid`: `!showid`~~  
+	- ~~`showid` ➜ `!showid`~~  
 	  ~~Toggles showing item IDs in tooltips.~~
 	
-	- `showidonhover`: `!showidonhover`  
+	- `showidonhover` ➜ `!showidonhover`  
 	  Show the item ID in chat when hovering.
 
 - **Teleport Commands**
-	- `tp`: `!tp [location]`  
+	- `tp` ➜ `!tp` `[location]`  
 	  Teleports the player to a location.
 	
-	- `tps`: `!tps`  
+	- `tps` ➜ `!tps`  
 	  Lists all available teleport destinations.
 
 - **Misc Commands**
-	- `ui`: `!ui [on|off]*`  
+	- `ui` ➜ `!ui` `on|off*`  
 	  Toggles the game’s HUD and UI elements.
 	
-	- `autofillmuseum`: `!autofillmuseum`  
+	- `autofillmuseum` ➜ `!autofillmuseum`  
 	  Toggles auto-fill of museum bundles on entry.
 	
-	- `cheatfillmuseum`: `!cheatfillmuseum`  
+	- `cheatfillmuseum` ➜ `!cheatfillmuseum`  
 	  Toggles cheat-fill of museum bundles on entry.
 	
-	- `yearfix`: `!yearfix`  
+	- `yearfix` ➜ `!yearfix`  
 	  Toggles corrected year calculation.
 	
-	- `cheats`: `!cheats`  
+	- `cheats` ➜ `!cheats`  
 	  Toggles the game’s built-in cheats and hotkeys.
 
 ## AutoFill Museum
