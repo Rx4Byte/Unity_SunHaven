@@ -205,11 +205,11 @@ Create a folder at the repository root named `.dependencies` *(git-ignored)* and
 	+ UnityEngine.dll
 	+ UnityEngine.CoreModule.dll
 
-- **BepInEx** (Mod Loader)
-	+ BepInEx.dll
+- **BepInEx** (Mod Loader) [GitHub](https://github.com/BepInEx/BepInEx)
+	+ BepInEx.dll (found under 'BepInEx\core')
 
-- **Harmony** (Run-time Patching)
-	+ 0Harmony.dll
+- **Harmony** (Run-time Patching) [GitHub](https://github.com/pardeike/Harmony)
+	+ 0Harmony.dll (also found under 'BepInEx\core')
 
 ### Setup Steps
 1. Clone the repository.
