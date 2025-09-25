@@ -15,12 +15,12 @@
     	<a href="https://github.com/">View Demo</a>
     	·-->
     	<a href="https://github.com/Rx4Byte/Unity_SunHaven/issues">Report Bug</a>
-    	·									
+    	·
     	<a href="https://github.com/Rx4Byte/Unity_SunHaven/issues">Request Feature</a>
-		<!--								
-    	·									
-    	<a href="https://github.com/Rx4Byte/Unity_SunHaven/issues">Star Athena</a>
-		-->
+    	·
+    	<a href="https://next.nexusmods.com/profile/Rx4Byte">NexusMods</a>
+    	·
+    	<a href="https://discord.gg/kdeee8w326">Discord Server</a>
   	</p>
 </div>
 
