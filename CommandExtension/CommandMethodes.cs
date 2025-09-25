@@ -981,11 +981,8 @@ namespace CommandExtension
 		/// <param name="message">The text to send to the player's chat.</param>
 		public static void MessageToChat(string message)
         {
-            if (!Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyFeedbackDisabled))
-            {
-                QuantumConsole.Instance.LogPlayerText(message);
-            }
-        }
+			QuantumConsole.Instance.LogPlayerText(message);
+		}
 
 		private static bool ToggleCommandState(string commandKey, bool notifyPlayer = true)
         {
