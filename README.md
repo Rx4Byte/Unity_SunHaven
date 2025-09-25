@@ -64,7 +64,7 @@ It operates alongside the game’s existing command system but uses its own comm
 ℹ️ Command Parameters with a star (*) are optional, e.g. [amount]*
 ```
 - **Core Commands**
-	- `help` ➜ `!help`  
+	- `help` ➜ `!help` `<command key>`  
 	  Displays a list of all available commands.
 	
 	- `state` ➜ `!state`  
@@ -154,10 +154,10 @@ It operates alongside the game’s existing command system but uses its own comm
 	- `give` ➜ `!give` `<id | name>` `amount*`  
 	  Gives item(s) to the player by ID or name.
 	
-	- `list` ➜ `!list <name>`  
+	- `items` ➜ `!items <name>`  
 	  Lists items matching the given name.
 	
-	- `items` ➜ `!items` `xp | currency | bonus | pet | decoration | armor | tool | food | crop | fish | normal]` `[get <amount>]*`  
+	- `list` ➜ `!list` `xp | currency | bonus | pet | decoration | armor | tool | food | crop | fish | normal]` `[get <amount>]*`  
 	  Show or give items filtered by category.
 	
 	- ~~`showid` ➜ `!showid`~~  
@@ -182,9 +182,6 @@ It operates alongside the game’s existing command system but uses its own comm
 	
 	- `cheatfillmuseum` ➜ `!cheatfillmuseum`  
 	  Toggles cheat-fill of museum bundles on entry.
-	
-	- `yearfix` ➜ `!yearfix`  
-	  Toggles corrected year calculation.
 	
 	- `cheats` ➜ `!cheats`  
 	  Toggles the game’s built-in cheats and hotkeys.
