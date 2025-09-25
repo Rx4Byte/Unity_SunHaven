@@ -10,78 +10,24 @@ using Wish;
 
 namespace CommandExtension
 {
+#pragma warning disable IDE0060 // Remove unused parameter
 	public static class HarmonyPatches
 	{
-#pragma warning disable IDE0060 // Remove unused parameter
-		// Pre-patch Player.SendChatMessage(string, string) method.
-		// Routes command messages into the command handler and suppresses normal chat when appropriate.
-		[HarmonyPatch(typeof(Player), nameof(Player.SendChatMessage), [typeof(string), typeof(string)])]
-		public static class Patch_PlayerSendChatMessage
-		{
-			/// <summary>
-			/// Prefix called before Player.SendChatMessage executes.
-			/// Determines whether the message is a chat command and, if so, prevents it 
-			/// from being sent as regular chat.
-			/// </summary>
-			/// <returns>
-			/// False to cancel the original SendChatMessage (command handled);
-			/// True to allow normal chat processing.
-			/// </returns>
-			/// <param name="characterName">Name of the player invoking SendChatMessage.</param>
-			/// <param name="message">The chat text or command to evaluate.</param>
-			public static bool Prefix(string characterName, string message)
-			{
-				// Only intercept commands from the tracked player.
-				// If CheckIfCommandSendChatMessage identifies this input as a command,
-				// suppress the normal chat send.
-				if (characterName == CommandMethodes.PlayerNameForCommands
-					&& CommandMethodes.IsCommand(message, true)) // && characterName != playerNameForCommandsFirst
-				{
-					// Suppress the chat send
-					return false;
-				}
+		// ============================================================
+		// Core Patches
+		// ============================================================
 
-				// Regular chat from the active player—allow it to proceed
-				return true;
-			}
-		}
-
-		// Pre-patch Player.DisplayChatBubble method.
-		// Suppresses the chat bubble when the text is recognized as a command.
-		[HarmonyPatch(typeof(Player), nameof(Player.DisplayChatBubble))]
-		public static class Patch_PlayerDisplayChatBubble
-		{
-			/// <summary>
-			/// Prefix called before Player.DisplayChatBubble executes.
-			/// Suppresses the chat bubble when the text is recognized as a command.
-			/// </summary>
-			/// <returns>
-			/// Returns false (skips original) when the message is a command, suppressing the chat bubble.
-			/// Returns true to allow normal processing for regular chat.
-			/// </returns>
-			/// <param name="text">The chat text about to be displayed.</param>
-			public static bool Prefix(ref string text)
-			{
-				if (CommandMethodes.IsCommand(text, false))
-				{
-					// This input is a command - Prevent the chat bubble from showing.
-					return false;
-				}
-
-				// Normal chat—allow bubble display.
-				return true;
-			}
-		}
-
-		// Pre-patch to hook into Player.Initialize for welcome messages, 
-		// in-game console setup and debug helper activation.
+		/// <summary>
+		/// Pre-patch Player.Initialize.
+		/// Used for welcome messages, in-game console setup and debug helper activation.
+		/// </summary>
 		[HarmonyPatch(typeof(Player), nameof(Player.Initialize))]
 		public static class Patch_PlayerInitialize
 		{
 			/// <summary>
 			/// Runs immediately after Player.Initialize completes.
-			/// Sends a greeting once per spawn, enables debug helpers if requested,
-			/// and sets up the quantum console for commands.
+			/// Sends a greeting on the first spawn, sets up the quantum console for commands,
+			/// and enables debug helpers if requested.
 			/// </summary>
 			/// <param name="__instance">The Player instance that was initialized.</param>
 			public static void Postfix(Player __instance)
@@ -118,8 +64,78 @@ namespace CommandExtension
 			}
 		}
 
-		// Post-patch GameSave.LoadCharacter.
-		// Captures the loaded character name.
+		/// <summary>
+		/// Pre-patch Player.SendChatMessage method.
+		/// Routes command messages into the command handler and suppresses normal chat when appropriate.
+		/// </summary>
+		[HarmonyPatch(typeof(Player), nameof(Player.SendChatMessage), [typeof(string), typeof(string)])]
+		public static class Patch_PlayerSendChatMessage
+		{
+			/// <summary>
+			/// Prefix called before Player.SendChatMessage executes.
+			/// Determines whether the message is a chat command and, if so, prevents it 
+			/// from being sent as regular chat.
+			/// </summary>
+			/// <returns>
+			/// False to cancel the original SendChatMessage (command handled);
+			/// True to allow normal chat processing.
+			/// </returns>
+			/// <param name="characterName">Name of the player invoking SendChatMessage.</param>
+			/// <param name="message">The chat text or command to evaluate.</param>
+			public static bool Prefix(string characterName, string message)
+			{
+				// Normalize to lowercase for case-insensitive command processing
+				message = message.ToLower();
+
+				// If the message has has a valid prefix, suppress the normal chat send.
+				if (Commands.HasCommandPrefix(message)) // && characterName != playerNameForCommandsFirst
+				{
+					Commands.ProcessCommand(message);
+
+					// Suppress the chat send
+					return false;
+				}
+
+				// Regular chat from the active player—allow it to proceed
+				return true;
+			}
+		}
+
+		/// <summary>
+		/// Pre-patch Player.DisplayChatBubble method.
+		/// Suppresses the chat bubble when the text is recognized as a command.
+		/// </summary>
+		[HarmonyPatch(typeof(Player), nameof(Player.DisplayChatBubble))]
+		public static class Patch_PlayerDisplayChatBubble
+		{
+			/// <summary>
+			/// Prefix called before Player.DisplayChatBubble executes.
+			/// Suppresses the chat bubble when the text is recognized as a command.
+			/// </summary>
+			/// <returns>
+			/// Returns false (skips original) when the message is a command, suppressing the chat bubble.
+			/// Returns true to allow normal processing for regular chat.
+			/// </returns>
+			/// <param name="text">The chat text about to be displayed.</param>
+			public static bool Prefix(ref string text)
+			{
+				// If the message has has a valid prefix, suppress the normal chat send.
+				if (Commands.HasCommandPrefix(text)) // && characterName != playerNameForCommandsFirst
+				{
+					// Suppress the chat send
+					return false;
+				}
+
+				// Normal chat—allow bubble display.
+				return true;
+			}
+		}
+
+		// TODO: Remove this class and the name system
+		/// <summary>
+		/// Post-patch GameSave.LoadCharacter methode.
+		/// Captures the loaded character name.
+		/// </summary>
 		[HarmonyPatch(typeof(GameSave), nameof(GameSave.LoadCharacter))]
 		public static class Patch_GameSaveLoadCharacter
 		{
@@ -135,8 +151,16 @@ namespace CommandExtension
 			}
 		}
 
-		// Pre-patch to override the buggy Year calculation.
-		// Applies a custom formula: (DayCycle.Day - 1) / 112 + 1.
+
+		// ============================================================
+		// Command Related Patches
+		// ============================================================
+
+		/// <summary>
+		/// Pre-patch DayCycle.Year getter.
+		/// Override the wrong Year calculation.
+		/// Applies a custom formula: (DayCycle.Day - 1) / 112 + 1.
+		/// </summary>
 		/*
 		[HarmonyPatch(typeof(DayCycle))]
 		[HarmonyPatch("Year", MethodType.Getter)]
@@ -150,8 +174,10 @@ namespace CommandExtension
 		}
 		*/
 
-		// Pre-patch Player.AirSkipsUsed setter.
-		// When infinite air skips are enabled, this prefix prevents the game from reducing the count.
+		/// <summary>
+		/// Pre-patch Player.AirSkipsUsed setter.
+		/// When infinite air skips are enabled, this prefix prevents the game from reducing the count.
+		/// </summary>
 		[HarmonyPatch(typeof(Player), nameof(Player.AirSkipsUsed), MethodType.Setter)]
 		public static class Patch_PlayerAirSkipsUsed
 		{
@@ -172,8 +198,11 @@ namespace CommandExtension
 			}
 		}
 
-		// Post-patch to modify Rigidbody behavior each frame when “jump-over” mode is active.
-		// While jumpOver is true and noclip is disabled, the player ignores collision when in the air
+		/// <summary>
+		/// Post-patch Player.Update
+		/// Modify Rigidbody when “jump-over” mode is active.
+		/// While jumpOver is true and noclip is disabled, the player ignores collision when in the air
+		/// </summary>
 		[HarmonyPatch(typeof(Player), "Update")]
 		public static class Patch_PlayerUpdate
 		{
@@ -188,22 +217,17 @@ namespace CommandExtension
 				// Apply only when jump-over is turned on and noclip is off
 				if (Commands.IsCommandActive(Commands.CmdKeyJumper) && !Commands.IsCommandActive(Commands.CmdKeyNoclip)) //ignore the wrong turned boolean!
 				{
-					if (__instance.Grounded)
-					{
-						// On ground: enable standard physics so the player can move normally
-						__instance.rigidbody.bodyType = RigidbodyType2D.Dynamic;
-					}
-					else
-					{
-						// In air: switch to kinematic to “jump over” obstacles without collision
-						__instance.rigidbody.bodyType = RigidbodyType2D.Kinematic;
-					}
+					// On ground: enable standard physics so the player can move normally
+					// In air: switch to kinematic to “jump over” obstacles without collision
+					__instance.rigidbody.bodyType = __instance.Grounded ? RigidbodyType2D.Dynamic : RigidbodyType2D.Kinematic;
 				}
 			}
 		}
 
-		// Pre-patch Player.UseMana(float) method.
-		// Prevents mana from being consumed when infinite-mana mode is enabled.
+		/// <summary>
+		/// Pre-patch Player.UseMana method.
+		/// Prevents mana from being consumed when infinite-mana mode is enabled.
+		/// </summary>
 		[HarmonyPatch(typeof(Player), nameof(Player.UseMana), [typeof(float)])]
 		public static class Patch_PlayerUseMana
 		{
@@ -219,8 +243,11 @@ namespace CommandExtension
 			}
 		}
 
-		// Pre-patch to override the game’s day‐night cycle speed.
-		// Applies pause or custom speed when the corresponding commands are active.
+		/// <summary>
+		/// Pre-patch Settings.DaySpeedMultiplier.
+		/// Override the game’s day‐night cycle speed.
+		/// Applies pause or custom speed when the corresponding commands are active.
+		/// </summary>
 		[HarmonyPatch(typeof(Settings), nameof(Settings.DaySpeedMultiplier), MethodType.Getter)]
 		public static class Patch_DayCycleDaySpeedMultiplier
 		{
@@ -234,31 +261,26 @@ namespace CommandExtension
 			{
 				if (Commands.IsCommandActive(Commands.CmdKeyPause))
 				{
-					__result = 0f;      // freeze time
-					return false;       // skip original getter
+					__result = 0f;  // freeze time
+					return false;  // skip original getter
 				}
 
 				if (Commands.IsCommandActive(Commands.CmdKeyTimespeed))
 				{
-					__result = CommandMethodes.TimeMultiplier;      // apply custom speed multiplier time  
-					return false;                   // skip original getter
+					__result = CommandMethodes.TimeMultiplier;  // apply custom speed multiplier time  
+					return false;  // skip original getter
 				}
 
 				// No command override, proceed with the game’s default multiplier
 				return true;
-
-				//if (Commands[Array.FindIndex(Commands, command => command.Name == ExtensionCommands.CmdPause)].State == ExtensionCommands.CommandState.Activated)
-				//    __result = 0f;
-				//else if (Commands[Array.FindIndex(Commands, command => command.Name == ExtensionCommands.CmdCustomDaySpeed)].State == ExtensionCommands.CommandState.Activated)
-				//    __result = timeMultiplier;
-				//else
-				//    return true;  // vanilla mulitplier
-				//return false;  // custom mulitplier
 			}
 		}
 
-		// Pre-patch to inject item IDs into tooltips and optionally print them on hover.
-		// Applies to GetToolTip(Tooltip, int, bool) across multiple item types.
+		/// <summary>
+		/// Pre-patch Tooltip.GetToolTip. - Applies to GetToolTip(Tooltip, int, bool) across multiple item types.
+		/// Adds the item id to the tooltip description.
+		/// Print item id to the chat on hover.
+		/// </summary>
 		[HarmonyPatch]
 		public static class Patch_ItemGetToolTip
 		{
@@ -313,7 +335,9 @@ namespace CommandExtension
 			}
 		}
 
-		// Pre-patch to display the raw item ID as the formatted description when in debug mode.
+		/// <summary>
+		/// Pre-patch to display the raw item ID as the formatted description when in debug mode.
+		/// </summary>
 		/*
 		[HarmonyPatch(typeof(ItemData))]
 		[HarmonyPatch("FormattedDescription", MethodType.Getter)]
@@ -339,7 +363,10 @@ namespace CommandExtension
 		}
 		*/
 
-		// Post-patch to auto-fill museum bundles when the appropriate fill commands are active.
+		/// <summary>
+		/// Post-patch HungryMonster.SetMeta.
+		/// Auto-fill museum bundles when a fill command is active.
+		/// </summary>
 		[HarmonyPatch(typeof(HungryMonster), nameof(HungryMonster.SetMeta))]
 		public static class Patch_HungryMonsterSetMeta
 		{
@@ -467,6 +494,6 @@ namespace CommandExtension
 				Array.ForEach(UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));
 			}
 		}
-#pragma warning restore IDE0060 // Remove unused parameter
 	}
+#pragma warning restore IDE0060 // Remove unused parameter
 }

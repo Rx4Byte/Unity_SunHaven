@@ -23,7 +23,7 @@ namespace CommandExtension
 		private static readonly Dictionary<string, int> _itemIds = (Dictionary<string, int>)typeof(Database).GetField("ids", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Database.Instance);
         private static readonly Dictionary<string, Dictionary<string, int>> _categorizedItems = new() {
             { "currency", new Dictionary<string, int>() { { "coins", 60000 }, { "orbs", 18010 }, { "tickets", 18011 }} },
-			{ "exp", new Dictionary<string, int>() { { "combatexp", 60003 }, { "farmingexp", 60004 }, { "miningexp", 60006 }, { "explorationexp", 60005 }, { "fishingexp", 60008 }} },
+			{ "xp", new Dictionary<string, int>() { { "combatexp", 60003 }, { "farmingexp", 60004 }, { "miningexp", 60006 }, { "explorationexp", 60005 }, { "fishingexp", 60008 }} },
 			{ "bonus", new Dictionary<string, int>() { { "health", 60009 }, { "mana", 60007 }} },
 			{ "decoration", new Dictionary<string, int>() { } },
 			{ "normal", new Dictionary<string, int>() { } },
@@ -34,6 +34,7 @@ namespace CommandExtension
 			{ "fish", new Dictionary<string, int>() { } },
 			{ "pet", new Dictionary<string, int>() { } }
 		};
+		private static bool _categorizedItemsAdded = false;
 
         private static string _lastScene;
         private static Vector2 _lastLocation;
@@ -89,7 +90,7 @@ namespace CommandExtension
 			//
 			//	}
 			//}
-
+			QuantumConsole.Instance.ClearConsole();
 			return true;
         }
 
@@ -116,7 +117,6 @@ namespace CommandExtension
 					MessageToChat($"Unknown Command: {param1}".ColorText(CommandExtension.RedColor));
 					MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
 				}
-
             }
             else
             {
@@ -125,17 +125,17 @@ namespace CommandExtension
                 {
                     if (command.State == CommandState.Activated)
 					{
-						MessageToChat($"{command.PrefixedKey.ColorText(CommandExtension.GreenColor)}{CommandExtension.MessageSeparator.ColorText(Color.black)}{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+						MessageToChat($"{command.PrefixedKey.ColorText(CommandExtension.GreenColor)} {command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
 					}
 
 					if (command.State == CommandState.Deactivated)
 					{
-						MessageToChat($"{command.PrefixedKey.ColorText(CommandExtension.RedColor)}{CommandExtension.MessageSeparator.ColorText(Color.black)}{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+						MessageToChat($"{command.PrefixedKey.ColorText(CommandExtension.RedColor)} {command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
 					}
 
 					if (command.State == CommandState.None)
 					{
-						MessageToChat($"{command.PrefixedKey.ColorText(CommandExtension.YellowColor)}{CommandExtension.MessageSeparator.ColorText(Color.black)}{command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
+						MessageToChat($"{command.PrefixedKey.ColorText(CommandExtension.YellowColor)} {command.Description.ColorText(new Color(1F, 0.66F, 0.0F))}");
 					}
 				}
             }
@@ -151,7 +151,7 @@ namespace CommandExtension
             {
                 if (command.State == CommandState.Activated)
                 {
-                    activeToggleMessages.Add($"{command.PrefixedKey.ColorText(CommandExtension.YellowColor)}{CommandExtension.MessageSeparator.ColorText(Color.black)}{command.State.ToString().ColorText(CommandExtension.GreenColor)}");
+                    activeToggleMessages.Add($"{command.PrefixedKey.ColorText(CommandExtension.YellowColor)} {command.State.ToString().ColorText(CommandExtension.GreenColor)}");
                 }
             }
 
@@ -170,6 +170,13 @@ namespace CommandExtension
             }
 
             return true;
+		}
+
+		// Clear Chat
+		public static bool CommandFunction_ClearChat(string commandInput)
+		{
+			QuantumConsole.Instance.ClearConsole();
+			return true;
 		}
 
 		// Toggle disable command feedback (output)
@@ -238,7 +245,7 @@ namespace CommandExtension
 				}
 
 				// Ensure the timespeed command is activated and dont notify player
-				_ = SetCommandState(commandKey: command, activate: true, notifyPlayer: false);
+				SetCommandState(commandKey: command, activate: true, notifyPlayer: false);
 
 				// Inform the player about the activation and the resulting multiplier
 				MessageToChat($"Custom Dayspeed {"Activated".ColorText(CommandExtension.GreenColor)} and {action.ColorText(CommandExtension.GreenColor)}: {TimeMultiplier.ToString().ColorText(Color.white)}".ColorText(CommandExtension.YellowColor));
@@ -585,7 +592,7 @@ namespace CommandExtension
                         int itemAmount = (mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1;
                         Player.Instance.Inventory.AddItem(itemId, itemAmount, 0, true, true);
                         string itemName = "unknown";
-                        Database.GetData(itemId, delegate (ItemData data)
+                        Database.GetData<ItemData>(itemId, delegate (ItemData data)
                         {
                             itemName = data.Name;
                         });
@@ -612,7 +619,13 @@ namespace CommandExtension
                                 {
                                     int itemAmount = (mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1;
                                     Player.Instance.Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
-                                    return true;
+									string itemName = "unknown";
+									Database.GetData(lastItemId, delegate (ItemData data)
+									{
+										itemName = data.Name;
+									});
+									MessageToChat($"{PlayerNameForCommands.ColorText(Color.magenta)} got {itemAmount.ToString().ColorText(Color.white)} x {itemName.ColorText(Color.white)}!".ColorText(CommandExtension.YellowColor));
+									return true;
                                 }
                             }
                         }
@@ -620,7 +633,12 @@ namespace CommandExtension
                         if (itemsFound == 1)
                         {
                             int itemAmount = (mayCommandParam.Length >= 3 && int.TryParse(mayCommandParam[2], out itemAmount)) ? itemAmount : 1;
-                            Player.Instance.Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
+							string itemName = "unknown";
+							Database.GetData(lastItemId, delegate (ItemData data)
+							{
+								itemName = data.Name;
+							});
+							Player.Instance.Inventory.AddItem(lastItemId, itemAmount, 0, true, true);
                         }
                         else if (itemsFound > 1)
 						{
@@ -690,7 +708,7 @@ namespace CommandExtension
 		{
 			string[] mayCommandParam = commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries);
 
-			static void MuseumGiveOrPrintItem(int id, int amount, bool give = false)
+			static void MuseumGiveOrPrintItem(int id, string name, int amount, bool give = false)
 			{
 				//Commands.CmdPrintItemIds + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]"
 				if (give)
@@ -699,124 +717,37 @@ namespace CommandExtension
 				}
 				else
 				{
-					MessageToChat($"{amount} : {id}");
+					MessageToChat($"{name} : {id}");
 				}
 			}
 
-			if (_categorizedItems == null && !CategorizeItemList())
+			if (!_categorizedItemsAdded && !CategorizeItemList())
 			{
 				MessageToChat($"Database Missing!".ColorText(CommandExtension.RedColor));
 				return true;
 			}
 
+			if (!(mayCommandParam.Length >= 2))
+			{
+				return true;
+			}
+
 			bool getItems = mayCommandParam.Length >= 3 && mayCommandParam[2] == "get";
 			int amount = (mayCommandParam.Length >= 4 && int.TryParse(mayCommandParam[2], out amount)) ? amount : 1;
+			string category = mayCommandParam[1];
 
-			switch ((mayCommandParam.Length >= 2) ? mayCommandParam[1] : "-")
+			if (_categorizedItems.TryGetValue(category, out Dictionary<string, int> items))
 			{
-				case "xp":
-					MessageToChat("[Exp Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["exp"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
+				MessageToChat($"[{category} Ids]".ColorText(Color.black));
 
-					break;
-
-				case "currency":
-					MessageToChat("[Currency Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["currency"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				case "bonus":
-					MessageToChat("[Bonus Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["bonus"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				case "decoration":
-					MessageToChat("[Decoration Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["decoration"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				case "armor":
-					MessageToChat("[Armor Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["armor"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				case "tool":
-					MessageToChat("[Tool Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["tool"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				case "food":
-					MessageToChat("[Food Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["food"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				case "crop":
-					MessageToChat("[Crop Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["crop"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				case "fish":
-					MessageToChat("[Fish Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["fish"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				case "pet":
-					MessageToChat("[Pet Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["pet"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				case "normal":
-					MessageToChat("[Normal Ids]".ColorText(Color.black));
-					foreach (KeyValuePair<string, int> item in _categorizedItems["normal"])
-					{
-						MuseumGiveOrPrintItem(item.Value, amount, getItems);
-					}
-
-					break;
-
-				default:
-					MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
-					//MessageToChat(Commands.CmdKeyPrintItemIds + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]".ColorText(CommandExtension.RedColor));
-					return true;
+				foreach (KeyValuePair<string, int> item in _categorizedItems[category])
+				{
+					MuseumGiveOrPrintItem(id: item.Value, name: item.Key, amount: amount, give: getItems);
+				}
+			}
+			else
+			{
+				MessageToChat(Commands.GetCommandByKey(mayCommandParam[0]).Usage.ColorText(CommandExtension.RedColor));
 			}
 
 			return true;
@@ -1043,43 +974,6 @@ namespace CommandExtension
 		// ============================================================
 
 		/// <summary>
-		/// Determines if the entered chat text is a command and, if so, suppresses the normal chat bubble.
-		/// Utility for DisplayChatBubble pre-patch.
-		/// </summary>
-		/// <param name="inputText">The raw chat input to evaluate for command syntax.</param>
-		/// <returns>
-		/// True when the text is a recognized command (so no chat bubble should show);  
-		/// false when it’s regular chat (bubble displays normally).
-		/// </returns>
-		public static bool IsCommand(string prefixedCommandInput, bool isMessage = false)
-		{
-			// Normalize to lowercase for case-insensitive prefix detection
-			prefixedCommandInput = prefixedCommandInput.ToLower();
-
-			// Command syntax: must start with '!' but not '!!' (latter is an escape for literal '!')
-			if (!(prefixedCommandInput.Length >= 2 && prefixedCommandInput[0] == '!' && prefixedCommandInput[1] != '!'))
-			{
-				return false;
-			}
-
-			if (Player.Instance == null)
-			{
-				// Verify there’s a valid player context before executing commands.
-				// Under normal conditions this should never be null.
-				// TODO: log a error and notify the player if it is null.
-			}
-
-			if (isMessage)
-			{
-				// remove prefix from command input
-				string commandInput = prefixedCommandInput.Remove(0, 1);
-				Commands.ProcessCommands(commandInput);
-			}
-
-			return true;
-		}
-
-		/// <summary>
 		/// Sends a text message to the player's chat when command feedback is enabled.
 		/// Checks the feedback-disabled command flag and logs the message to the QuantumConsole
 		/// instance if chat feedback is currently allowed.
@@ -1095,8 +989,7 @@ namespace CommandExtension
 
 		private static bool ToggleCommandState(string commandKey, bool notifyPlayer = true)
         {
-            string state = Commands.ToggleCommandState(commandKey)
-                ? "On".ColorText(CommandExtension.GreenColor) : "Off".ColorText(CommandExtension.RedColor);
+            string state = Commands.ToggleCommandState(commandKey) ? "On".ColorText(CommandExtension.GreenColor) : "Off".ColorText(CommandExtension.RedColor);
 
             if (notifyPlayer)
             {
@@ -1106,7 +999,7 @@ namespace CommandExtension
             return true;
         }
 
-        private static bool SetCommandState(string commandKey, bool activate = true, bool notifyPlayer = true)
+        private static void SetCommandState(string commandKey, bool activate = true, bool notifyPlayer = true)
         {
             Commands.SetCommandState(commandKey, activate);
             string state = activate
@@ -1116,8 +1009,6 @@ namespace CommandExtension
             {
                 MessageToChat($"{commandKey} {state}".ColorText(CommandExtension.YellowColor));
             }
-
-            return true;
         }
 
         private static bool CategorizeItemList()
@@ -1133,40 +1024,40 @@ namespace CommandExtension
                 {
                     if (itemInfo.decorationType is not DecorationType.None)
                     {
-                        _categorizedItems["Decoration"].Add(item.Key, item.Value);
+                        _categorizedItems["decoration"].Add(item.Key, item.Value);
                     }
                     else if (itemInfo.itemType is ItemType.Armor)
                     {
-                        _categorizedItems["Armor"].Add(item.Key, item.Value);
+                        _categorizedItems["armor"].Add(item.Key, item.Value);
                     }
                     else if (itemInfo.itemType is ItemType.Tool or ItemType.WateringCan)
                     {
-                        _categorizedItems["Tool"].Add(item.Key, item.Value);
+                        _categorizedItems["tool"].Add(item.Key, item.Value);
                     }
                     else if (itemInfo.itemType is ItemType.Food)
                     {
-                        _categorizedItems["Food"].Add(item.Key, item.Value);
+                        _categorizedItems["food"].Add(item.Key, item.Value);
                     }
                     else if (itemInfo.itemType is ItemType.Crop)
                     {
-                        _categorizedItems["Crop"].Add(item.Key, item.Value);
+                        _categorizedItems["crop"].Add(item.Key, item.Value);
                     }
                     else if (itemInfo.itemType is ItemType.Fish)
                     {
-                        _categorizedItems["Fish"].Add(item.Key, item.Value);
+                        _categorizedItems["fish"].Add(item.Key, item.Value);
                     }
                     else if (itemInfo.itemType is ItemType.Pet)
                     {
-                        _categorizedItems["Pet"].Add(item.Key, item.Value);
+                        _categorizedItems["pet"].Add(item.Key, item.Value);
                     }
                     else
                     {
-                        _categorizedItems["Normal"].Add(item.Key, item.Value);
+                        _categorizedItems["normal"].Add(item.Key, item.Value);
                     }
                 }
             }
 
-            return true;
+			return _categorizedItemsAdded = true;
         }
 
 		private static readonly Regex _npcNameRegex = new(@"[a-zA-Z\s\.]+", RegexOptions.Compiled);
@@ -1268,176 +1159,184 @@ namespace CommandExtension
 		// Structs
 		// ============================================================
 
-		private struct CommandDefaultValues
+		private readonly struct CommandDefaultValues
 		{
 			public const float timeMultiplier = 0.2F;
 		}
 
 		private readonly struct TeleportLocation(Vector2 position, string destination)
 		{
-			public Vector2 Position { get; } = position;
-			public string Destination { get; } = destination;
+			public readonly Vector2 Position { get; } = position;
+			public readonly string Destination { get; } = destination;
 		}
 	}
 
+	/// <summary>
+	/// Attribute-marked container that exposes in-game console commands to the game's
+	/// command generator. Methods in this class annotated with the [Command] attribute
+	/// are discovered by the game and registered as chat commands using the configured
+	/// command prefix applied to the class (see <see cref="CommandPrefixAttribute"/>).
+	/// 
+	/// Behavior:
+	/// Methods annotated with [Command] are registered as commands shown in the chat
+	/// box and participate in the game's autocomplete (Tab key) and suggestion system.
+	/// </summary>
 #pragma warning disable IDE0060 // Remove unused parameter
 	[CommandPrefix("!")]
     public partial class CommandsToGenerate
     {
-		// Debug
-		//[Command(Commands.CmdKeyDebug, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
-        //private static void GenerateCommand_Debug() { }
-
-
 		// Help
-		[Command(Commands.CmdKeyHelp, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyHelp, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
         private static void GenerateCommand_Help() { }
 
 
 		// State
-		[Command(Commands.CmdKeyState, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyState, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
         private static void GenerateCommand_State() { }
 
+		// Clear Chat
+		[Command(Commands.CmdKeyClearChat, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
+		private static void GenerateCommand_ClearChat() { }
 
 		// Feedback toggle
-		//[Command(Commands.CmdKeyFeedbackDisabled, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		//[Command(Commands.CmdKeyFeedbackDisabled, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		//private static void GenerateCommand_FeedbackDisabled() { }
 
 
 		// Command target name
-		//[Command(Commands.CmdKeyName, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		//[Command(Commands.CmdKeyName, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		//private static void GenerateCommand_Name(string playerName) { }
 
 
 		// Mine commands
-		[Command(Commands.CmdKeyMineReset, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyMineReset, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_MineReset() { }
 
-		[Command(Commands.CmdKeyMineClear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyMineClear, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_MineClear() { }
 
-		[Command(Commands.CmdKeyMineOverfill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyMineOverfill, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_MineOverfill() { }
 
 
 		// Time commands
-		[Command(Commands.CmdKeyPause, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyPause, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Pause() { }
 
-		[Command(Commands.CmdKeyTimespeed, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyTimespeed, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_CustomDaySpeed(string Value_or_Nothing_to_reset) { }
 
-		[Command(Commands.CmdKeyDate, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyDate, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		public static void GenerateCommand_SetDate(string DayOrHoure_and_Value) { }
 
-		[Command(Commands.CmdKeySeason, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeySeason, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_SetSeason(string season) { }
 
-		[Command(Commands.CmdKeyYear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyYear, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Years(string amount) { }
 
-		[Command(Commands.CmdKeyWeather, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyWeather, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		public static void GenerateCommand_Weather(string raining_heatwave_clear) { }
 
-		//[Command(Commands.CmdFixYear, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		//[Command(Commands.CmdFixYear, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		//private static void fm40(string value) { }
 
 
 		// Currency commands
-		[Command(Commands.CmdKeyMoney, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyMoney, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Money(string amount) { }
 
-		[Command(Commands.CmdKeyCoins, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyCoins, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Coins(string amount) { }
 
-		[Command(Commands.CmdKeyOrbs, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyOrbs, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
         private static void GenerateCommand_Orbs(string amount) { }
 
-        [Command(Commands.CmdKeyTickets, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+        [Command(Commands.CmdKeyTickets, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
         private static void GenerateCommand_Tickets(string amount) { }
 
 
 		// Player
-		[Command(Commands.CmdKeySleep, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeySleep, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Sleep() { }
 
-		[Command(Commands.CmdKeyDashInfinite, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyDashInfinite, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_DashInfinite() { }
 
-		[Command(Commands.CmdKeyDasher, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyDasher, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Dasher() { }
 
-		[Command(Commands.CmdKeyJumper, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyJumper, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Jumper() { }
 
-		[Command(Commands.CmdKeyJumpOver, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyJumpOver, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_JumpOver() { }
 
-		[Command(Commands.CmdKeyNoclip, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyNoclip, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_NoClip() { }
 
-		[Command(Commands.CmdKeyManaFill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyManaFill, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_ManaFill() { }
 
-		[Command(Commands.CmdKeyManaInfinite, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyManaInfinite, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_ManaInf() { }
 
-		[Command(Commands.CmdKeyHealthFill, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyHealthFill, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_HealthFill() { }
 
-		[Command(Commands.CmdKeyNoHit, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyNoHit, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_NoHit() { }
 
 
 		// Misc
-		[Command(Commands.CmdKeyAutoFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyAutoFillMuseum, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_AutoFillMuseum() { }
 
-		[Command(Commands.CmdKeyCheatFillMuseum, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyCheatFillMuseum, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_CheatFillMuseum() { }
 
-		[Command(Commands.CmdKeyUI, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyUI, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCompmand_UI(string On_or_Off) { }
 
-		[Command(Commands.CmdKeyCheats, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyCheats, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Cheats() { }
 
 
 		// NPC relationship
-		[Command(Commands.CmdKeyMarry, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyMarry, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Marry(string NPC_Name) { }
 
-		[Command(Commands.CmdKeyDivorce, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyDivorce, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Unmarry(string NPC_Name) { }
 
-		[Command(Commands.CmdKeyRelationship, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyRelationship, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Relationship(string NPC_Name_and_value) { }
 
 
 		// Items
-		[Command(Commands.CmdKeyShowCategorizedItems, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyShowCategorizedItems, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_CategorizedItems(string xp_currency_bonus_Pet_decoration_armor_tool_food_crop_fish_normal) { }
 
-		[Command(Commands.CmdKeyGiveItem, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyGiveItem, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
         private static void GenerateCommand_Give(string itemName) { }
 
-        [Command(Commands.CmdKeyShowItem, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+        [Command(Commands.CmdKeyShowItem, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
         private static void GenerateCommand_ShowItems(string itemName) { }
 
-		[Command(Commands.CmdKeyShowItemInfoOnHover, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyShowItemInfoOnHover, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_ShowItemIdOnHover() { }
 
-		[Command(Commands.CmdKeyDevKit, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyDevKit, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
         private static void GenerateCommand_DevKit() { }
 
-		[Command(Commands.CmdKeyShowItemInfoOnTooltip, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyShowItemInfoOnTooltip, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_ShowItemIdOnTooltip(string INFO_ShowsItemIdsInDescription) { }
 
 		// Teleport
-		[Command(Commands.CmdKeyTeleport, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyTeleport, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Teleport(string location) { }
 
-		[Command(Commands.CmdKeyTeleportLocations, QFSW.QC.Platform.AllPlatforms, MonoTargetType.Single)]
+		[Command(Commands.CmdKeyTeleportLocations, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_TeleportLocations() { }
 	}
 #pragma warning restore IDE0060 // Remove unused parameter

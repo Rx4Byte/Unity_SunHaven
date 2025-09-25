@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using CommandExtension.Models;
+using QFSW.QC.Utilities;
+using UnityEngine;
 
 namespace CommandExtension
 {
@@ -23,6 +25,11 @@ namespace CommandExtension
 		public const string CmdKeyState = "state";
         public const string CmdDesState = "Shows which commands are currently activated.";
         public const string CmdUseState = CmdPrefix + CmdKeyState;
+
+		// Fix/Clear Chat
+		public const string CmdKeyClearChat = "clear";
+		public const string CmdDesClearChat = "Clears chat (also fixes broken chat).";
+		public const string CmdUseClearChat = CmdPrefix + CmdKeyClearChat;
 
 		// Feedback toggle
 		public const string CmdKeyFeedbackDisabled = "feedback";
@@ -101,11 +108,6 @@ namespace CommandExtension
 		public const string CmdKeyTickets = "tickets";
         public const string CmdDesTickets = "Adds or removes Tickets.";
         public const string CmdUseTickets = CmdPrefix + CmdKeyTickets + " (-)[amount]";
-
-		// Devkit
-		public const string CmdKeyDevKit = "devkit";
-        public const string CmdDesDevKit = "Grants the developer kit items.";
-        public const string CmdUseDevKit = CmdPrefix + CmdKeyDevKit;
 
 		//// Player toggles
 		// Jumper
@@ -211,14 +213,20 @@ namespace CommandExtension
         public const string CmdDesGiveItem = "Gives item/s by ID or name.";
         public const string CmdUseGiveItem = CmdPrefix + CmdKeyGiveItem + " [ID|name] [amount]";
 
-		// List
-		public const string CmdKeyShowItem = "list";
+		// Items
+		public const string CmdKeyShowItem = "items";
         public const string CmdDesShowItem = "Lists items matching the given name.";
         public const string CmdUseShowItem = CmdPrefix + CmdKeyShowItem + " [name]";
 
-        public const string CmdKeyShowCategorizedItems = "items";
+		// List
+        public const string CmdKeyShowCategorizedItems = "list";
         public const string CmdDesShowCategorizedItems = "Show or Give Items filtered by category.";
         public const string CmdUseShowCategorizedItems = CmdPrefix + CmdKeyShowCategorizedItems + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]";
+
+		// Devkit
+		public const string CmdKeyDevKit = "devkit";
+		public const string CmdDesDevKit = "Grants the developer kit items.";
+		public const string CmdUseDevKit = CmdPrefix + CmdKeyDevKit;
 
 		// ShowId
 		public const string CmdKeyShowItemInfoOnTooltip = "showid";
@@ -250,6 +258,9 @@ namespace CommandExtension
 
             // State
             { CmdKeyState,					new Command(CmdPrefix + CmdKeyState,					CmdDesState,					CmdUseState,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_State(commandInput)) },
+			
+            // Clear
+            { CmdKeyClearChat,				new Command(CmdPrefix + CmdKeyClearChat,			CmdDesClearChat,				CmdUseClearChat,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_ClearChat(commandInput)) },
 
             // Feedback toggle
           //{ CmdKeyFeedbackDisabled,		new Command(CmdPrefix + CmdKeyFeedbackDisabled,			CmdDesFeedbackDisabled,			CmdUseFeedbackDisabled,			CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_FeedbackDisabled(commandInput)) },
@@ -312,24 +323,51 @@ namespace CommandExtension
             { CmdKeyTeleport,				new Command(CmdPrefix + CmdKeyTeleport,					CmdDesTeleport,					CmdUseTeleport,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_TeleportToScene(commandInput)) },
             { CmdKeyTeleportLocations,		new Command(CmdPrefix + CmdKeyTeleportLocations,		CmdDesTeleportLocations,		CmdUseTeleportLocations,		CommandState.None,        commandInput => CommandMethodes.CommandFunction_TeleportLocations(commandInput)) }
         };
-
+		
+		private static readonly Dictionary<string, string> _commandAliases = new() {
+			{ CmdKeyDasher, CmdKeyDashInfinite },
+			{ CmdKeyJumper, CmdKeyJumpOver },
+			{ CmdKeyUnmarry, CmdKeyDivorce } };
 
 		/// <summary>
-		/// Parses the input string to determine the command key (first token) and, if a matching
-		/// command exists in the GeneratedCommands dictionary, invokes that command with the full
-		/// input string as argument.
+		/// Determines if the entered chat text has a command prefix.
+		/// </summary>
+		/// <param name="inputText">The raw chat input text.</param>
+		/// <returns>
+		/// True when the text has a command prefix, else False.
+		/// </returns>
+		public static bool HasCommandPrefix(string prefixedCommandInput)
+		{
+			// Command syntax: must start with '!' but not '!!' (latter is an escape for literal '!')
+			return prefixedCommandInput.Length >= 2 && prefixedCommandInput[0] == '!' && prefixedCommandInput[1] != '!';
+		}
+
+		/// <summary>
+		/// Parses the input string to determine the command key (first token) and,
+		/// if a matching command exists, invokes that command.
 		/// </summary>
 		/// <param name="commandInput">The full input string.</param>
-		public static void ProcessCommands(string commandInput)
+		public static void ProcessCommand(string commandInput)
         {
+			// remove prefix from command input
+			commandInput = commandInput.Remove(0, 1);
+
+			// get command key from input, resolve the alias and replace the command key commandInput with the resolved command key
 			string commandKey = commandInput.Split([' '], System.StringSplitOptions.RemoveEmptyEntries)[0];
 			string resolvedCommandKey = ResolveCommandAlias(commandKey);
 			commandInput = commandInput.Replace(commandKey, resolvedCommandKey);
 			
+			// if the command is registered, invoke the command
 			if (GeneratedCommands.TryGetValue(resolvedCommandKey, out Command command))
             {
                 command.Invoke(commandInput);
             }
+			else
+			{
+				CommandMethodes.MessageToChat($"Unknown Command: ".ColorText(CommandExtension.RedColor)
+					+ commandKey.ColorText(Color.white)
+					+ "\n" + commandInput.ColorText(CommandExtension.DarkGrayColor));
+			}
         }
 
 		/// <summary>
@@ -341,26 +379,11 @@ namespace CommandExtension
 		/// <returns>The command key for the alias, or the original key if no alias matches.</returns>
 		public static string ResolveCommandAlias(string commandKey)
 		{
-			if (commandKey.Equals(CmdKeyDasher))
-			{
-				return CmdKeyDashInfinite;
-			}
-
-			if (commandKey.Equals(CmdKeyJumper))
-			{
-				return CmdKeyJumpOver;
-			}
-
-			if (commandKey.Equals(CmdKeyUnmarry))
-			{
-				return CmdKeyDivorce;
-			}
-
-			return commandKey;
+			return _commandAliases.TryGetValue(commandKey, out string newCommandKey) ? newCommandKey : commandKey;
 		}
 
 		/// <summary>
-		/// Attempts to find a Command by its key and returns it if found; otherwise returns null.
+		/// Attempts to find a Command by its key and returns it if found, otherwise returns null.
 		/// </summary>
 		/// <param name="commandKey">The key/name of the command to look up.</param>
 		/// <returns>The matching Command instance or null when not present.</returns>
@@ -370,11 +393,10 @@ namespace CommandExtension
 		}
 
 		/// <summary>
-		/// Checks whether the command identified by <paramref name="commandKey"/> exists and is
-		/// currently in the Activated state.
+		/// Checks whether the command identified by <paramref name="commandKey"/> exists and is currently in the Activated state.
 		/// </summary>
 		/// <param name="commandKey">The key/name of the command to check.</param>
-		/// <returns>True if the command exists and is Activated; otherwise false.</returns>
+		/// <returns>True if the command exists and is Activated, otherwise false.</returns>
 		public static bool IsCommandActive(string commandKey)
         {
 			return GeneratedCommands.TryGetValue(commandKey, out Command command) && command.State == CommandState.Activated;
@@ -386,10 +408,10 @@ namespace CommandExtension
 		/// method returns true if the new state is Activated; otherwise returns false.
 		/// </summary>
 		/// <param name="commandKey">The key/name of the command to toggle.</param>
-		/// <returns>True when the command was found and is now Activated; false when not found or now Deactivated.</returns>
+		/// <returns>True when the command was found and is now Activated, false when not found or Deactivated.</returns>
 		public static bool ToggleCommandState(string commandKey)
         {
-			return GeneratedCommands.TryGetValue(commandKey, out Command command) && (command.State = command.State == CommandState.Activated ? CommandState.Deactivated : CommandState.Activated) == CommandState.Activated;
+			return GeneratedCommands.TryGetValue(commandKey, out Command command) && (command.State = (command.State == CommandState.Activated) ? CommandState.Deactivated : CommandState.Activated) == CommandState.Activated;
 		}
 
 		/// <summary>
