@@ -18,53 +18,6 @@ namespace CommandExtension
 		// ============================================================
 
 		/// <summary>
-		/// Pre-patch Player.Initialize.
-		/// Used for welcome messages, in-game console setup and debug helper activation.
-		/// </summary>
-		[HarmonyPatch(typeof(Player), nameof(Player.Initialize))]
-		public static class Patch_PlayerInitialize
-		{
-			/// <summary>
-			/// Runs immediately after Player.Initialize completes.
-			/// Sends a greeting on the first spawn, sets up the quantum console for commands,
-			/// and enables debug helpers if requested.
-			/// </summary>
-			/// <param name="__instance">The Player instance that was initialized.</param>
-			public static void Postfix(Player __instance)
-			{
-				// On the third initialize call, display a welcome message.
-				if (CommandMethodes.PlayerInitializationCount < CommandExtension.PLAYER_INITIALIZATION_COUNT_WANTED)
-				{
-					CommandMethodes.PlayerInitializationCount++;
-				}
-				else if (CommandMethodes.PlayerInitializationCount == CommandExtension.PLAYER_INITIALIZATION_COUNT_WANTED)
-				{
-					CommandMethodes.PlayerInitializationCount++;
-
-					// Enable in-game command feature 
-					if (Player.Instance != null && QuantumConsole.Instance)
-					{
-						// Temporarily enable cheats for console initialization.
-						QuantumConsole.Instance.GenerateCommands = Settings.EnableCheats = true;
-						QuantumConsole.Instance.Initialize();
-
-						// Revert the cheat-enable flag after setup.
-						Settings.EnableCheats = false;
-					}
-					
-					if (CommandExtension.DEBUG)
-					{
-						CommandExtension.GreetDebug();
-					}
-					else
-					{
-						CommandExtension.GreetNormal();
-					}
-				}
-			}
-		}
-
-		/// <summary>
 		/// Pre-patch Player.SendChatMessage method.
 		/// Routes command messages into the command handler and suppresses normal chat when appropriate.
 		/// </summary>
@@ -131,7 +84,6 @@ namespace CommandExtension
 			}
 		}
 
-		// TODO: Remove this class and the name system
 		/// <summary>
 		/// Post-patch GameSave.LoadCharacter methode.
 		/// Captures the loaded character name.
@@ -141,13 +93,75 @@ namespace CommandExtension
 		{
 			/// <summary>
 			/// Called after loading a character save slot.
-			/// Stores the characterName for use in chat‐command processing.
+			/// Stores the characterName.
 			/// </summary>
 			/// <param name="characterNumber">The index of the character that was loaded.</param>
 			/// <param name="__instance">The GameSave instance containing the loaded data.</param>
 			public static void Postfix(int characterNumber, GameSave __instance)
 			{
-				CommandMethodes.PlayerNameForCommands = CommandMethodes.PlayerNameForCommandsFirst = __instance.CurrentSave.characterData.characterName;
+				CommandMethodes.CharacterName = __instance.CurrentSave.characterData.characterName;
+			}
+		}
+
+		/// <summary>
+		/// Pre-patch Player.Initialize.
+		/// Used for welcome messages, in-game console setup and debug helper activation.
+		/// </summary>
+		[HarmonyPatch(typeof(Player), nameof(Player.Initialize))]
+		public static class Patch_PlayerInitialize
+		{
+			/// <summary>
+			/// Runs immediately after Player.Initialize completes.
+			/// Sends a greeting on the first spawn, sets up the quantum console for commands,
+			/// and enables debug helpers if requested.
+			/// </summary>
+			/// <param name="__instance">The Player instance that was initialized.</param>
+			public static void Postfix(Player __instance)
+			{
+				if (CommandMethodes.PlayerInitializationCount < CommandExtension.ACTUAL_PLAYER_INITIALIZATION)
+				{
+					CommandMethodes.PlayerInitializationCount++;
+				}
+				else if (CommandMethodes.PlayerInitializationCount == CommandExtension.ACTUAL_PLAYER_INITIALIZATION)
+				{
+					CommandMethodes.PlayerInitializationCount++;
+
+					// Enable in-game command feature 
+					if (Player.Instance != null && QuantumConsole.Instance != null)
+					{
+						// Temporarily enable cheats for console initialization.
+						QuantumConsole.Instance.GenerateCommands = Settings.EnableCheats = true;
+						QuantumConsole.Instance.Initialize();
+
+						// Revert the cheat-enable flag after setup.
+						Settings.EnableCheats = false;
+
+						//QuantumConsole.Instance.ClearConsole();
+					}
+
+					if (CommandExtension.DEBUG)
+					{
+						CommandMethodes.MessageToChat(CommandExtension.GREET_MESSAGE.ColorText(CommandExtension.GreetColor));
+						CommandMethodes.MessageToChat("DEBUG".ColorText(CommandExtension.MagentaColor)
+								+ (CommandExtension.DEBUG_LOG ? "    -DEBUG_LOG".ColorText(CommandExtension.MagentaColor) : "")
+								+ (CommandExtension.DEBUG_HELPER ? "    -DEBUG_HELPER".ColorText(CommandExtension.MagentaColor) : ""));
+
+						if (CommandExtension.DEBUG_HELPER)
+						{
+							CommandMethodes.CommandFunction_Pause(Commands.CmdKeyPause);
+							CommandMethodes.CommandFunction_JumpOver(Commands.CmdKeyJumpOver);
+							CommandMethodes.CommandFunction_DashInfinite(Commands.CmdKeyDashInfinite);
+							CommandMethodes.CommandFunction_ManaInfinite(Commands.CmdKeyManaInfinite);
+							CommandMethodes.CommandFunction_NoHit(Commands.CmdKeyNoHit);
+							CommandMethodes.CommandFunction_Date(Commands.CmdKeyDate + " h 12");
+						}
+					}
+					else
+					{
+						CommandMethodes.MessageToChat(CommandExtension.GREET_MESSAGE.ColorText(CommandExtension.GreetColor));
+						CommandMethodes.MessageToChat(CommandExtension.GREET_INFO_MESSAGE.ColorText(CommandExtension.GreetInfoColor));
+					}
+				}
 			}
 		}
 
@@ -215,7 +229,7 @@ namespace CommandExtension
 			public static void Postfix(ref Player __instance)
 			{
 				// Apply only when jump-over is turned on and noclip is off
-				if (Commands.IsCommandActive(Commands.CmdKeyJumper) && !Commands.IsCommandActive(Commands.CmdKeyNoclip)) //ignore the wrong turned boolean!
+				if (Commands.IsCommandActive(Commands.CmdKeyJumpOver) && !Commands.IsCommandActive(Commands.CmdKeyNoclip)) //ignore the wrong turned boolean!
 				{
 					// On ground: enable standard physics so the player can move normally
 					// In air: switch to kinematic to “jump over” obstacles without collision
@@ -318,18 +332,18 @@ namespace CommandExtension
 						CommandMethodes.MessageToChat($"{data.id} : {data.name}");
 					}
 
-					string text = "ID: ".ColorText(Color.magenta) + data.id.ToString().ColorText(Color.magenta) + "\"\n\"";
-					if (Commands.IsCommandActive(Commands.CmdKeyShowItemInfoOnTooltip))
-					{
-						if (!data.description.Contains(text))
-						{
-							data.description = text + data.description;
-						}
-					}
-					else if (data.description.Contains(text))
-					{
-						data.description = data.description.Replace(text, "");
-					}
+					//string text = "ID: ".ColorText(Color.magenta) + data.id.ToString().ColorText(Color.magenta) + "\"\n\"";
+					//if (Commands.IsCommandActive(Commands.CmdKeyShowItemInfoOnTooltip))
+					//{
+					//	if (!data.description.Contains(text))
+					//	{
+					//		data.description = text + data.description;
+					//	}
+					//}
+					//else if (data.description.Contains(text))
+					//{
+					//	data.description = data.description.Replace(text, "");
+					//}
 
 				});
 			}
@@ -368,8 +382,13 @@ namespace CommandExtension
 		/// Auto-fill museum bundles when a fill command is active.
 		/// </summary>
 		[HarmonyPatch(typeof(HungryMonster), nameof(HungryMonster.SetMeta))]
-		public static class Patch_HungryMonsterSetMeta
+		public class Patch_HungryMonsterSetMeta
 		{
+			//public static bool Prefix(HungryMonster __instance, DecorationPositionData decorationData)
+			//{
+			//	return false;
+			//}
+
 			/// <summary>
 			/// Postfix runs after HungryMonster.SetMeta executes.
 			/// If this bundle is a museum bundle and either the cheat-fill or auto-fill command is activated,
@@ -377,122 +396,256 @@ namespace CommandExtension
 			/// from the player’s inventory (auto-fill mode), then refresh all museum visuals.
 			/// </summary>
 			/// <param name="__instance">The HungryMonster instance being configured.</param>
-			public static void Postfix(HungryMonster __instance)
+			public static void Postfix(HungryMonster __instance, DecorationPositionData decorationData)
 			{
-				// Only proceed for actual museum bundles
-				if (__instance.bundleType != BundleType.MuseumBundle)
+				if (__instance == null || __instance.bundleType != BundleType.MuseumBundle)
 				{
 					return;
 				}
-
-				// Determine if either fill command is active
+			
 				bool cheatFill = Commands.IsCommandActive(Commands.CmdKeyCheatFillMuseum);
 				bool autoFill = Commands.IsCommandActive(Commands.CmdKeyAutoFillMuseum);
 				if (!cheatFill && !autoFill)
 				{
 					return;
 				}
-
-				// Ensure a valid player context for auto-fill
+			
 				Player player = Player.Instance;
 				if (player.Inventory == null || player.Inventory.Items == null)
 				{
 					return;
 				}
-
-				Inventory playerInventory = player.Inventory;
-
-
+			
 				HungryMonster monster = __instance;
 				if (monster.sellingInventory == null || monster.sellingInventory.Items == null)
 				{
 					return;
 				}
-
-				Inventory monsterInventory = monster.sellingInventory;
-
+			
+				//slotItemData.item == null || slotItemData.slot.numberOfItemToAccept == 0 || slotItemData.amount == slotItemData.slot.numberOfItemToAccept
 				// Cheat-fill: force all slots to max regardless of player inventory
 				if (cheatFill)
 				{
-					foreach (SlotItemData slot in monsterInventory.Items)
+					foreach (SlotItemData monsterSlotItemData in monster.sellingInventory.Items)
 					{
-						if (slot.slot.numberOfItemToAccept == 0 || slot.amount >= slot.slot.numberOfItemToAccept)
+						if (monsterSlotItemData == null || monsterSlotItemData.item == null)
 						{
 							continue;
 						}
 
+						// is slot number = slot index? --> monster.sellingInventory.IsSlotFull(monsterSlotItemData.slot.slotNumber)
+						if (monsterSlotItemData.slot.numberOfItemToAccept == 0 || monsterSlotItemData.amount >= monsterSlotItemData.slot.numberOfItemToAccept)
+						{
+							continue;
+						}
+
+						int itemId = monsterSlotItemData.slot.serializedItemToAccept.id;
+						int transferAmount = monsterSlotItemData.slot.numberOfItemToAccept - monsterSlotItemData.amount;
 						bool isMoneyBundle = monster.name.ToLower().Contains("money");
-						int needed = slot.slot.numberOfItemToAccept - slot.amount;
+						//bool isMoneyItemId = itemId >= 60000 && itemId <= 60002;
 
-						if (isMoneyBundle && slot.slot.itemToAccept.id >= 60000 && slot.slot.itemToAccept.id <= 60002)
+						//
+						//SingletonBehaviour<GameSave>.Instance.SavePlayerInventory();
+						//monster.playerInventory.LoadInventory(SingletonBehaviour<GameSave>.Instance.CurrentSave.characterData.Items);
+						//monster.SetupIconEvent();
+						//ItemIcon.PrimaryInventory = monster.playerInventory;
+						//ItemIcon.ExternalInventory = monster.sellingInventory;
+						//monster.SaveMeta();
+						//monster.SendNewMeta(monster.meta);
+
+						monster.sellingInventory.AddItem(item: itemId, amount: transferAmount, slot: monsterSlotItemData.slotNumber, sendNotification: false, specialItem: !isMoneyBundle);
+
+						ItemIcon itemIcon = monsterSlotItemData.slot.GetComponentInChildren<ItemIcon>();
+						if (!itemIcon)
 						{
-							monsterInventory.AddItem(item: slot.slot.itemToAccept.id,
-								amount: needed,
-								slot: slot.slotNumber,
-								sendNotification: false,
-								specialItem: false);
-						}
-						else if (!isMoneyBundle)
-						{
-							monsterInventory.AddItem(slot.slot.serializedItemToAccept.id, needed, slot.slotNumber, false);
+							itemIcon = UnityEngine.Object.Instantiate<ItemIcon>(SingletonBehaviour<Prefabs>.Instance.ItemIcon, monsterSlotItemData.slot.transform);
+							monsterSlotItemData.slot.ModifyItemQuality(monsterSlotItemData.item);
+							itemIcon.Initialize(monsterSlotItemData);
 						}
 
-						monster.SaveMeta();
-						monster.SendNewMeta(monster.meta);
-						monster.UpdateFullness(true);
+						monster.SetupIconEvent();
+
+						itemIcon.UpdateAmount(monsterSlotItemData.slot.numberOfItemToAccept);
 					}
-
 				}
 				// Auto-fill: move matching items from the player’s inventory
 				else
 				{
-					foreach (SlotItemData moonsterItem in monsterInventory.Items)
+					foreach (SlotItemData monsterSlotItemData in monster.sellingInventory.Items)
 					{
-						if (moonsterItem.slot.numberOfItemToAccept == 0 || moonsterItem.amount >= moonsterItem.slot.numberOfItemToAccept)
+						if (monsterSlotItemData == null || monster.name.ToLower().Contains("money") || monsterSlotItemData.item == null)
 						{
 							continue;
 						}
 
-
-						if (monster.name.ToLower().Contains("money"))
+						// is slot number = slot index? --> monster.sellingInventory.IsSlotFull(monsterSlotItemData.slot.slotNumber)
+						if (monsterSlotItemData.slot.numberOfItemToAccept == 0 || monsterSlotItemData.amount >= monsterSlotItemData.slot.numberOfItemToAccept)
 						{
 							continue;
 						}
 
-						foreach (SlotItemData playerItem in playerInventory.Items)
+						foreach (SlotItemData playerSlotItemData in player.Inventory.Items)
 						{
-							if (playerItem.id != moonsterItem.slot.serializedItemToAccept.id)
+							if (playerSlotItemData == null || playerSlotItemData.item == null || playerSlotItemData.amount <= 0 || playerSlotItemData.slot.serializedItemToAccept.id != monsterSlotItemData.slot.serializedItemToAccept.id)
 							{
 								continue;
 							}
 
-							int amount = Math.Min(playerItem.amount, moonsterItem.slot.numberOfItemToAccept - moonsterItem.amount);
+							//int num = slotItemData.slot.onlyAcceptSpecificItem ? slotItemData.slot.numberOfItemToAccept : itemData.stackSize;
+							int itemId = playerSlotItemData.id;
+							int transferAmount = Math.Min(playerSlotItemData.amount, monsterSlotItemData.slot.numberOfItemToAccept - monsterSlotItemData.amount);
 
-							monsterInventory.AddItem(item: playerItem.id,
-								amount: amount,
-								slot: moonsterItem.slotNumber,
-								sendNotification: false);
+							monster.sellingInventory.AddItem(item: itemId, amount: transferAmount, slot: monsterSlotItemData.slotNumber, sendNotification: false);
+
+							ItemIcon itemIcon = monsterSlotItemData.slot.GetComponentInChildren<ItemIcon>();
+							if (!itemIcon)
+							{
+								itemIcon = UnityEngine.Object.Instantiate<ItemIcon>(SingletonBehaviour<Prefabs>.Instance.ItemIcon, monsterSlotItemData.slot.transform);
+								monsterSlotItemData.slot.ModifyItemQuality(monsterSlotItemData.item);
+								itemIcon.Initialize(monsterSlotItemData);
+							}
+
+							itemIcon.UpdateAmount(monsterSlotItemData.slot.numberOfItemToAccept);
 
 							string itemName = "unkown";
-							if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(playerItem.id, out ItemSellInfo itemSellInfo))
+							if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(itemId, out ItemSellInfo itemSellInfo))
 							{
 								itemName = itemSellInfo.name;
 							}
 
-							CommandMethodes.MessageToChat($"added: {amount.ToString().ColorText(Color.white)} * "
-								+ $"{itemName.ColorText(Color.green)}"
-								+ " to the museum!");
-							_ = playerInventory.RemoveItem(playerItem.item, amount);
-
-							monster.SaveMeta();
-							monster.SendNewMeta(monster.meta);
-							monster.UpdateFullness(true);
+							_ = player.Inventory.RemoveItem(id: itemId, amount: transferAmount);
+							
+							CommandMethodes.MessageToChat($"Removed: {transferAmount.ToString().ColorText(Color.white)} * " + $"{itemName.ColorText(CommandExtension.NormalColor)}");
 						}
 					}
 				}
 
-				Array.ForEach(UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));
+				monster.SaveInventory();
+				//(monster as Chest).SetMeta(decorationData);
+				monster.UpdateFullness(true);
+
+				//Array.ForEach(UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));
+				MethodInfo OnSaveInventoryMethode = typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.Instance | BindingFlags.NonPublic);
+				MuseumBundleVisual[] museumBundleVisuals = UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>();
+				foreach (MuseumBundleVisual museumBundleVisual in museumBundleVisuals)
+				{
+					_ = OnSaveInventoryMethode.Invoke(museumBundleVisual, null);
+				}
 			}
+
+			//static void Postfix(HungryMonster __instance, DecorationPositionData decorationData)
+			//{
+			//	// Only proceed for actual museum bundles
+			//	if (__instance.bundleType != BundleType.MuseumBundle)
+			//	{
+			//		return;
+			//	}
+			//
+			//	// Determine if either fill command is active
+			//	bool cheatFill = Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyCheatFillMuseum);
+			//	bool autoFill = Commands.IsCommandActive(Commands.CmdPrefix + Commands.CmdKeyAutoFillMuseum);
+			//	if (!cheatFill && !autoFill)
+			//	{
+			//		return;
+			//	}
+			//
+			//	// Ensure a valid player context for auto-fill
+			//	Player player = Player.Instance;
+			//	if (player.Inventory == null || player.Inventory.Items == null)
+			//	{
+			//		return;
+			//	}
+			//	Inventory playerInventory = player.Inventory;
+			//
+			//
+			//	HungryMonster monster = __instance;
+			//	if (monster.sellingInventory == null || monster.sellingInventory.Items == null)
+			//	{
+			//		return;
+			//	}
+			//	Inventory monsterInventory = monster.sellingInventory;
+			//
+			//	// Cheat-fill: force all slots to max regardless of player inventory
+			//	if (cheatFill)
+			//	{
+			//		foreach (SlotItemData slot in monsterInventory.Items)
+			//		{
+			//			if (slot.slot.numberOfItemToAccept == 0 || slot.amount >= slot.slot.numberOfItemToAccept)
+			//			{
+			//				continue;
+			//			}
+			//
+			//			bool isMoneyBundle = monster.name.ToLower().Contains("money");
+			//			int needed = slot.slot.numberOfItemToAccept - slot.amount;
+			//
+			//			if (isMoneyBundle && slot.slot.itemToAccept.id >= 60000 && slot.slot.itemToAccept.id <= 60002)
+			//			{
+			//				monsterInventory.AddItem(item: slot.slot.itemToAccept.id,
+			//					amount: needed,
+			//					slot: slot.slotNumber,
+			//					sendNotification: false,
+			//					specialItem: false);
+			//			}
+			//			else if (!isMoneyBundle)
+			//			{
+			//				monsterInventory.AddItem(slot.slot.serializedItemToAccept.id, needed, slot.slotNumber, false);
+			//			}
+			//			monster.SaveMeta();
+			//			monster.SendNewMeta(monster.meta);
+			//			monster.UpdateFullness(true);
+			//		}
+			//
+			//	}
+			//	// Auto-fill: move matching items from the player’s inventory
+			//	else
+			//	{
+			//		foreach (SlotItemData moonsterItem in monsterInventory.Items)
+			//		{
+			//			if (moonsterItem.slot.numberOfItemToAccept == 0 || moonsterItem.amount >= moonsterItem.slot.numberOfItemToAccept)
+			//			{
+			//				continue;
+			//			}
+			//
+			//
+			//			if (monster.name.ToLower().Contains("money"))
+			//			{
+			//				continue;
+			//			}
+			//
+			//			foreach (var playerItem in playerInventory.Items)
+			//			{
+			//				if (playerItem.id != moonsterItem.slot.serializedItemToAccept.id)
+			//				{
+			//					continue;
+			//				}
+			//
+			//				int amount = Math.Min(playerItem.amount, moonsterItem.slot.numberOfItemToAccept - moonsterItem.amount);
+			//
+			//				monsterInventory.AddItem(item: playerItem.id,
+			//					amount: amount,
+			//					slot: moonsterItem.slotNumber,
+			//					sendNotification: false);
+			//
+			//				string itemName = "unkown";
+			//				if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(playerItem.id, out ItemSellInfo itemSellInfo))
+			//				{
+			//					itemName = itemSellInfo.name;
+			//				}
+			//
+			//				CommandMethodes.MessageToChat($"added: {amount.ToString().ColorText(Color.white)} * "
+			//					+ $"{itemName.ColorText(Color.green)}"
+			//					+ " to the museum!");
+			//				playerInventory.RemoveItem(playerItem.item, amount);
+			//
+			//				monster.SaveMeta();
+			//				monster.SendNewMeta(monster.meta);
+			//				monster.UpdateFullness(true);
+			//			}
+			//		}
+			//	}
+			//
+			//	Array.ForEach(UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));
+			//}
 		}
 	}
 #pragma warning restore IDE0060 // Remove unused parameter

@@ -1,12 +1,10 @@
 ﻿using BepInEx;
 using HarmonyLib;
 using System;
-using QFSW.QC.Utilities;
+using System.Linq;
 using System.Reflection;
 using BepInEx.Configuration;
 using Wish;
-using QFSW.QC;
-using UnityEngine;
 
 namespace AutoFillMuseum
 {
@@ -28,7 +26,7 @@ namespace AutoFillMuseum
         {
             ModEnabled = Config.Bind("General", "Enabled", true, $"Enable {PluginInfo.PLUGIN_NAME}");
             //ShowNotifications = Config.Bind("General", "Show Notifications", true, "Show notifications when items are added to the museum");
-            _ = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), PluginInfo.PLUGIN_GUID);
+            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), PluginInfo.PLUGIN_GUID);
         }
 
         [HarmonyPostfix]
@@ -59,48 +57,40 @@ namespace AutoFillMuseum
 
 			Inventory monsterInventory = monster.sellingInventory;
 
-			foreach (SlotItemData moonsterItem in monsterInventory.Items)
-					{
-						if (moonsterItem.slot.numberOfItemToAccept == 0 || moonsterItem.amount >= moonsterItem.slot.numberOfItemToAccept)
-						{
-							continue;
-						}
+			foreach (var slotItemData in monster.sellingInventory.Items.Where(slotItemData => slotItemData.item != null && slotItemData.slot.numberOfItemToAccept != 0 && slotItemData.amount < slotItemData.slot.numberOfItemToAccept))
+            {
+                if (monster.name.ToLower().Contains("money"))
+                {
+                    continue;
+                }
 
-						if (monster.name.ToLower().Contains("money"))
-						{
-							continue;
-						}
+                foreach (var playerItem in playerInventory.Items)
+                {
+                    if (playerItem.id != slotItemData.slot.serializedItemToAccept.id)
+                    {
+                        continue;
+                    }
 
-						foreach (SlotItemData playerItem in playerInventory.Items)
-						{
-							if (playerItem.id != moonsterItem.slot.serializedItemToAccept.id)
-							{
-								continue;
-							}
+                    int amount = Math.Min(playerItem.amount, slotItemData.slot.numberOfItemToAccept - slotItemData.amount);
 
-							int amount = Math.Min(playerItem.amount, moonsterItem.slot.numberOfItemToAccept - moonsterItem.amount);
+                    monster.sellingInventory.AddItem(playerItem.id, amount, slotItemData.slotNumber, false);
+                    playerInventory.RemoveItem(playerItem.item, amount);
 
-							monsterInventory.AddItem(item: playerItem.id,
-								amount: amount,
-								slot: moonsterItem.slotNumber,
-								sendNotification: false);
+                    monster.SaveMeta();
+                    monster.SendNewMeta(monster.meta);
+                    monster.UpdateFullness(true);
 
-							string itemName = "unkown";
-							if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(playerItem.id, out ItemSellInfo itemSellInfo))
-							{
-								itemName = itemSellInfo.name;
-							}
-
-							QuantumConsole.Instance.LogPlayerText($"added: {amount.ToString().ColorText(Color.white)} * "
-								+ $"{itemName.ColorText(Color.green)}"
-								+ " to the museum!");
-							_ = playerInventory.RemoveItem(playerItem.item, amount);
-
-							monster.SaveMeta();
-							monster.SendNewMeta(monster.meta);
-							monster.UpdateFullness(true);
-						}
-					}
+                    //if (ShowNotifications.Value)
+                    //{
+                    //    string itemName = "unkown";
+                    //    if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(playerItem.id, out ItemSellInfo itemSellInfo))
+                    //    {
+                    //        itemName = itemSellInfo.name;
+                    //    }
+                    //    //SingletonBehaviour<NotificationStack>.Instance.SendNotification($"Added {itemName} to the museum!", playerItem.id, amount);
+                    //}
+                }
+            }
 
             Array.ForEach(UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));
         }

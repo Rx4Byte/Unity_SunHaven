@@ -251,7 +251,7 @@ namespace CommandExtension
 
         public static Dictionary<string, Command> GeneratedCommands { get; private set; } = new() {
             // Debug
-            { CmdKeyDebug,					new Command(CmdPrefix + CmdKeyDebug,					CmdDesDebug,					CmdUseDebug,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Debug(commandInput)) },
+            //{ CmdKeyDebug,					new Command(CmdPrefix + CmdKeyDebug,					CmdDesDebug,					CmdUseDebug,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Debug(commandInput)) },
 
             // Help
             { CmdKeyHelp,					new Command(CmdPrefix + CmdKeyHelp,						CmdDesHelp,						CmdUseHelp,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Help(commandInput)) },
@@ -260,13 +260,7 @@ namespace CommandExtension
             { CmdKeyState,					new Command(CmdPrefix + CmdKeyState,					CmdDesState,					CmdUseState,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_State(commandInput)) },
 			
             // Clear
-            { CmdKeyClearChat,				new Command(CmdPrefix + CmdKeyClearChat,			CmdDesClearChat,				CmdUseClearChat,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_ClearChat(commandInput)) },
-
-            // Feedback toggle
-          //{ CmdKeyFeedbackDisabled,		new Command(CmdPrefix + CmdKeyFeedbackDisabled,			CmdDesFeedbackDisabled,			CmdUseFeedbackDisabled,			CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_FeedbackDisabled(commandInput)) },
-
-            // Command-Target name 
-          //{ CmdKeyName,					new Command(CmdPrefix + CmdKeyName,						CmdDesName,						CmdUseName,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_SetName(commandInput)) },
+            { CmdKeyClearChat,				new Command(CmdPrefix + CmdKeyClearChat,				CmdDesClearChat,				CmdUseClearChat,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_ClearChat(commandInput)) },
 
             // Mine Commands
             { CmdKeyMineReset,				new Command(CmdPrefix + CmdKeyMineReset,				CmdDesMineReset,				CmdUseMineReset,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_MinesReset(commandInput)) },
@@ -280,8 +274,7 @@ namespace CommandExtension
             { CmdKeyWeather,				new Command(CmdPrefix + CmdKeyWeather,					CmdDesWeather,					CmdUseWeather,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Weather(commandInput)) },
             { CmdKeySeason,					new Command(CmdPrefix + CmdKeySeason,					CmdDesSeason,					CmdUseSeason,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Season(commandInput)) },
             { CmdKeyYear,					new Command(CmdPrefix + CmdKeyYear,						CmdDesYear,						CmdUseYear,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Year(commandInput)) },
-          //{ CmdKeyYearFix,				new Command(CmdPrefix + CmdKeyYearFix,                  CmdDesYearFix,                  CmdUseYearFix,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_ToggleYearFix(commandInput)) },
-
+          
             // Currency Commands
             { CmdKeyMoney,					new Command(CmdPrefix + CmdKeyMoney,					CmdDesMoney,					CmdUseMoney,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Coins(commandInput)) },
             { CmdKeyCoins,					new Command(CmdPrefix + CmdKeyCoins,					CmdDesCoins,					CmdUseCoins,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Coins(commandInput)) },
@@ -295,10 +288,8 @@ namespace CommandExtension
             { CmdKeyHealthFill,				new Command(CmdPrefix + CmdKeyHealthFill,				CmdDesHealthFill,				CmdUseHealthFill,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_HealthFill(commandInput)) },
             { CmdKeyNoHit,					new Command(CmdPrefix + CmdKeyNoHit,					CmdDesNoHit,					CmdUseNoHit,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_NoHit(commandInput)) },
             { CmdKeyNoclip,					new Command(CmdPrefix + CmdKeyNoclip,					CmdDesNoClip,					CmdUseNoClip,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_Noclip(commandInput)) },
-		  //{ CmdKeyJumper,                 new Command(CmdPrefix + CmdKeyJumper,                   CmdDesJumper,                   CmdUseJumper,                   CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_JumpOver(commandInput)) },
-			{ CmdKeyJumpOver,				new Command(CmdPrefix + CmdKeyJumpOver,                 CmdDesJumpOver,                 CmdUseJumpOver,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_JumpOver(commandInput)) },
-		  //{ CmdKeyDasher,					new Command(CmdPrefix + CmdKeyDasher,                   CmdDesDasher,                   CmdUseDasher,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_DashInfinite(commandInput)) },
-			{ CmdKeyDashInfinite,           new Command(CmdPrefix + CmdKeyDashInfinite,             CmdDesDashInfinite,             CmdUseDashInfinite,             CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_DashInfinite(commandInput)) },
+		    { CmdKeyJumpOver,				new Command(CmdPrefix + CmdKeyJumpOver,                 CmdDesJumpOver,                 CmdUseJumpOver,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_JumpOver(commandInput)) },
+		    { CmdKeyDashInfinite,           new Command(CmdPrefix + CmdKeyDashInfinite,             CmdDesDashInfinite,             CmdUseDashInfinite,             CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_DashInfinite(commandInput)) },
 
             // Misc Commands
             { CmdKeyAutoFillMuseum,			new Command(CmdPrefix + CmdKeyAutoFillMuseum,			CmdDesAutoFillMuseum,			CmdUseAutoFillMuseum,			CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_AutoFillMuseum(commandInput)) },
@@ -316,7 +307,7 @@ namespace CommandExtension
             { CmdKeyShowItem,				new Command(CmdPrefix + CmdKeyShowItem,					CmdDesShowItem,					CmdUseShowItem,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_ShowItem(commandInput)) },
             { CmdKeyShowCategorizedItems,	new Command(CmdPrefix + CmdKeyShowCategorizedItems,		CmdDesShowCategorizedItems,		CmdUseShowCategorizedItems,		CommandState.None,        commandInput => CommandMethodes.CommandFunction_ShowCategorizedItems(commandInput)) },
             { CmdKeyShowItemInfoOnHover,	new Command(CmdPrefix + CmdKeyShowItemInfoOnHover,		CmdDesShowItemInfoOnHover,		CmdUseShowItemInfoOnHover,		CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_ShowItemInfoOnHover(commandInput)) },
-            { CmdKeyShowItemInfoOnTooltip,	new Command(CmdPrefix + CmdKeyShowItemInfoOnTooltip,	CmdDesShowItemInfoOnTooltip,	CmdUseShowItemInfoOnTooltip,	CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_ShowItemInfoOnTooltip(commandInput)) },
+            //{ CmdKeyShowItemInfoOnTooltip,	new Command(CmdPrefix + CmdKeyShowItemInfoOnTooltip,	CmdDesShowItemInfoOnTooltip,	CmdUseShowItemInfoOnTooltip,	CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_ShowItemInfoOnTooltip(commandInput)) },
 			{ CmdKeyDevKit,					new Command(CmdPrefix + CmdKeyDevKit,					CmdDesDevKit,					CmdUseDevKit,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_DevKit(commandInput)) },
 
             // Teleport
@@ -360,8 +351,8 @@ namespace CommandExtension
 			// if the command is registered, invoke the command
 			if (GeneratedCommands.TryGetValue(resolvedCommandKey, out Command command))
             {
-                command.Invoke(commandInput);
-            }
+				command.Action?.Invoke(commandInput);
+			}
 			else
 			{
 				CommandMethodes.MessageToChat($"Unknown Command: ".ColorText(CommandExtension.RedColor)

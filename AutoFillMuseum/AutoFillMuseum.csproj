@@ -37,10 +37,6 @@
     <Reference Include="BepInEx">
       <HintPath>..\.dependencies\BepInEx.dll</HintPath>
     </Reference>
-    <Reference Include="QFSW.QC, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\.dependencies\QFSW.QC.dll</HintPath>
-    </Reference>
     <Reference Include="Sirenix.Serialization">
       <HintPath>..\.dependencies\Sirenix.Serialization.dll</HintPath>
     </Reference>
