@@ -14,11 +14,11 @@ namespace ControllerBypass
 
 #pragma warning disable IDE0060 // Remove unused parameter
 	[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-    public partial class ControllerBypass : BaseUnityPlugin
+    public partial class ControllerDeactivator : BaseUnityPlugin
     {
 		private void Awake()
 		{
-			_ = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
+			_ = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), PluginInfo.PLUGIN_GUID);
 		}
 
 		[HarmonyPatch(typeof(Input), "GetButton")]

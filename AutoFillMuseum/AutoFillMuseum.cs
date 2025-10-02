@@ -1,10 +1,12 @@
 ﻿using BepInEx;
 using HarmonyLib;
 using System;
-using System.Linq;
 using System.Reflection;
 using BepInEx.Configuration;
 using Wish;
+using UnityEngine;
+using QFSW.QC;
+using QFSW.QC.Utilities;
 
 namespace AutoFillMuseum
 {
@@ -25,14 +27,13 @@ namespace AutoFillMuseum
         private void Awake()
         {
             ModEnabled = Config.Bind("General", "Enabled", true, $"Enable {PluginInfo.PLUGIN_NAME}");
-            //ShowNotifications = Config.Bind("General", "Show Notifications", true, "Show notifications when items are added to the museum");
-            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), PluginInfo.PLUGIN_GUID);
+			//ShowNotifications = Config.Bind("General", "Show Notifications", true, "Show notifications when items are added to the museum");
+			_ = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), PluginInfo.PLUGIN_GUID);
         }
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(HungryMonster), nameof(HungryMonster.SetMeta))]
-        private static void HungryMonster_SetMeta(HungryMonster __instance)
-        {
+		[HarmonyPatch(typeof(HungryMonster), nameof(HungryMonster.SetMeta))]
+		public static void Postfix(HungryMonster __instance, DecorationPositionData decorationData)
+		{
 			// Only proceed for actual museum bundles
 			if (!ModEnabled.Value || __instance.bundleType != BundleType.MuseumBundle)
 			{
@@ -46,53 +47,67 @@ namespace AutoFillMuseum
 				return;
 			}
 
-			Inventory playerInventory = player.Inventory;
-
-
 			HungryMonster monster = __instance;
 			if (monster.sellingInventory == null || monster.sellingInventory.Items == null)
 			{
 				return;
 			}
 
-			Inventory monsterInventory = monster.sellingInventory;
+			foreach (SlotItemData monsterSlotItemData in monster.sellingInventory.Items)
+			{
+				if (monsterSlotItemData == null || monster.name.ToLower().Contains("money") || monsterSlotItemData.item == null)
+				{
+					continue;
+				}
 
-			foreach (var slotItemData in monster.sellingInventory.Items.Where(slotItemData => slotItemData.item != null && slotItemData.slot.numberOfItemToAccept != 0 && slotItemData.amount < slotItemData.slot.numberOfItemToAccept))
-            {
-                if (monster.name.ToLower().Contains("money"))
-                {
-                    continue;
-                }
+				// is slot number = slot index? --> monster.sellingInventory.IsSlotFull(monsterSlotItemData.slot.slotNumber)
+				if (monsterSlotItemData.slot.numberOfItemToAccept == 0 || monsterSlotItemData.amount >= monsterSlotItemData.slot.numberOfItemToAccept)
+				{
+					continue;
+				}
 
-                foreach (var playerItem in playerInventory.Items)
-                {
-                    if (playerItem.id != slotItemData.slot.serializedItemToAccept.id)
-                    {
-                        continue;
-                    }
+				foreach (SlotItemData playerSlotItemData in player.Inventory.Items)
+				{
+					if (playerSlotItemData == null || playerSlotItemData.id != monsterSlotItemData.slot.serializedItemToAccept.id || playerSlotItemData.amount <= 0)
+					{
+						continue;
+					}
+					
+					int itemId = playerSlotItemData.id;
+					int transferAmount = Math.Min(playerSlotItemData.amount, monsterSlotItemData.slot.numberOfItemToAccept - monsterSlotItemData.amount);
 
-                    int amount = Math.Min(playerItem.amount, slotItemData.slot.numberOfItemToAccept - slotItemData.amount);
+					monster.sellingInventory.AddItem(item: itemId, amount: transferAmount, slot: monsterSlotItemData.slotNumber, sendNotification: false);
 
-                    monster.sellingInventory.AddItem(playerItem.id, amount, slotItemData.slotNumber, false);
-                    playerInventory.RemoveItem(playerItem.item, amount);
+					ItemIcon itemIcon = monsterSlotItemData.slot.GetComponentInChildren<ItemIcon>();
+					if (!itemIcon)
+					{
+						itemIcon = UnityEngine.Object.Instantiate<ItemIcon>(SingletonBehaviour<Prefabs>.Instance.ItemIcon, monsterSlotItemData.slot.transform);
+						monsterSlotItemData.slot.ModifyItemQuality(monsterSlotItemData.item);
+						itemIcon.Initialize(monsterSlotItemData);
+					}
 
-                    monster.SaveMeta();
-                    monster.SendNewMeta(monster.meta);
-                    monster.UpdateFullness(true);
+					itemIcon.UpdateAmount(monsterSlotItemData.slot.numberOfItemToAccept);
 
-                    //if (ShowNotifications.Value)
-                    //{
-                    //    string itemName = "unkown";
-                    //    if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(playerItem.id, out ItemSellInfo itemSellInfo))
-                    //    {
-                    //        itemName = itemSellInfo.name;
-                    //    }
-                    //    //SingletonBehaviour<NotificationStack>.Instance.SendNotification($"Added {itemName} to the museum!", playerItem.id, amount);
-                    //}
-                }
-            }
+					string itemName = "unkown";
+					if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(itemId, out ItemSellInfo itemSellInfo))
+					{
+						itemName = itemSellInfo.name;
+					}
 
-            Array.ForEach(UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));
-        }
+					_ = player.Inventory.RemoveItem(id: itemId, amount: transferAmount);
+					QuantumConsole.Instance.LogPlayerText($"Removed: {transferAmount.ToString().ColorText(Color.white)} x " + $"{itemName.ColorText(Color.white)}");
+				}
+			}
+
+			monster.SetupIconEvent();
+			monster.UpdateFullness(true);
+
+			MethodInfo OnSaveInventoryMethode = typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.Instance | BindingFlags.NonPublic);
+			MuseumBundleVisual[] museumBundleVisuals = UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>();
+			foreach (MuseumBundleVisual museumBundleVisual in museumBundleVisuals)
+			{
+				_ = OnSaveInventoryMethode.Invoke(museumBundleVisual, null);
+			}
+		}
     }
 }

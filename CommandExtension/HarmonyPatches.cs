@@ -73,7 +73,7 @@ namespace CommandExtension
 			public static bool Prefix(ref string text)
 			{
 				// If the message has has a valid prefix, suppress the normal chat send.
-				if (Commands.HasCommandPrefix(text)) // && characterName != playerNameForCommandsFirst
+				if (Commands.HasCommandPrefix(text))
 				{
 					// Suppress the chat send
 					return false;
@@ -486,7 +486,7 @@ namespace CommandExtension
 
 						foreach (SlotItemData playerSlotItemData in player.Inventory.Items)
 						{
-							if (playerSlotItemData == null || playerSlotItemData.item == null || playerSlotItemData.amount <= 0 || playerSlotItemData.slot.serializedItemToAccept.id != monsterSlotItemData.slot.serializedItemToAccept.id)
+							if (playerSlotItemData == null || playerSlotItemData.id != monsterSlotItemData.slot.serializedItemToAccept.id || playerSlotItemData.amount <= 0)
 							{
 								continue;
 							}
@@ -514,14 +514,11 @@ namespace CommandExtension
 							}
 
 							_ = player.Inventory.RemoveItem(id: itemId, amount: transferAmount);
-							
-							CommandMethodes.MessageToChat($"Removed: {transferAmount.ToString().ColorText(Color.white)} * " + $"{itemName.ColorText(CommandExtension.NormalColor)}");
+							CommandMethodes.MessageToChat($"Removed: {transferAmount.ToString().ColorText(CommandExtension.WhiteColor)} x " + $"{itemName.ColorText(CommandExtension.NormalColor)}");
 						}
 					}
 				}
 
-				monster.SaveInventory();
-				//(monster as Chest).SetMeta(decorationData);
 				monster.UpdateFullness(true);
 
 				//Array.ForEach(UnityEngine.Object.FindObjectsOfType<MuseumBundleVisual>(), vPodium => typeof(MuseumBundleVisual).GetMethod("OnSaveInventory", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vPodium, null));

@@ -5,7 +5,7 @@ VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandExtension", "CommandExtension\CommandExtension.csproj", "{B7EAA018-E0FC-4A5F-BDBE-94798E3365DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControllerBypass", "ControllerBypass\ControllerBypass.csproj", "{1B192269-2D69-4904-A679-AC402E89CAD3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControllerDeactivator", "ControllerDeactivator\ControllerDeactivator.csproj", "{1B192269-2D69-4904-A679-AC402E89CAD3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing.csproj", "{302487BE-82A1-4CEA-869E-634D70630FD7}"
 EndProject

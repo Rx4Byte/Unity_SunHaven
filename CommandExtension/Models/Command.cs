@@ -2,7 +2,7 @@
 
 namespace CommandExtension.Models
 {
-    public enum CommandState
+    public enum CommandState : byte
     {
         None,
         Activated,

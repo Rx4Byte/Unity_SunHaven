@@ -9,7 +9,7 @@ namespace CommandExtension
     {
         public const string PLUGIN_NAME = "Command Extension";
         public const string PLUGIN_GUID = "com.Rx4Byte.CommandExtension";
-        public const string PLUGIN_VERSION = "2.0.0";
+        public const string PLUGIN_VERSION = "2.0.1";
     }
 
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -41,7 +41,7 @@ namespace CommandExtension
 		/// </summary>
 		private void Awake()
         {
-			_ = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
+			_ = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), PluginInfo.PLUGIN_GUID);
         }
 	}
 }

@@ -282,6 +282,7 @@ namespace CommandExtension
 					switch (commandTokens[1][0])
 					{
 						// day
+						// TODO: fix too high numbers
 						case 'd':
 							if (dateValue is <= 0 or > 28)
 							{
@@ -1014,7 +1015,7 @@ namespace CommandExtension
         {
             Commands.SetCommandState(commandKey, activate);
             string state = activate
-                ? "On".ColorText(CommandExtension.GreenColor) : "Off".ColorText(CommandExtension.RedColor);
+				? "On".ColorText(CommandExtension.GreenColor) : "Off".ColorText(CommandExtension.RedColor);
 
             if (notifyPlayer)
             {
@@ -1024,7 +1025,7 @@ namespace CommandExtension
 
         private static bool CategorizeItemList()
         {
-            if (_itemIds == null || _itemIds.Count < 1)
+            if (_itemIds == null)
             {
                 return false;
             }
