@@ -59,6 +59,12 @@ namespace CommandExtension
 		[Command(Commands.CmdKeyDate, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		public static void GenerateCommand_SetDate(string DayOrHoure_and_Value) { }
 
+		[Command(Commands.CmdKeyDay, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
+		public static void GenerateCommand_SetDay(string day) { }
+
+		[Command(Commands.CmdKeyHour, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
+		public static void GenerateCommand_Hour(string hour) { }
+
 		[Command(Commands.CmdKeySeason, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_SetSeason(string season) { }
 

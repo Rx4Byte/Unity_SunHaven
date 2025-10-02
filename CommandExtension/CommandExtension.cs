@@ -9,7 +9,7 @@ namespace CommandExtension
     {
         public const string PLUGIN_NAME = "Command Extension";
         public const string PLUGIN_GUID = "com.Rx4Byte.CommandExtension";
-        public const string PLUGIN_VERSION = "2.0.1";
+        public const string PLUGIN_VERSION = "2.1.0";
     }
 
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]

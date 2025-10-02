@@ -70,8 +70,18 @@ namespace CommandExtension
 
 		// Time
 		public const string CmdKeyDate = "time";
-        public const string CmdDesDate = "Sets the current hour or day in the day/night cycle.";
-        public const string CmdUseDate = CmdPrefix + CmdKeyDate + " [h|d] [value]";
+		public const string CmdDesDate = "Sets the current hour or day in the day/night cycle.";
+		public const string CmdUseDate = CmdPrefix + CmdKeyDate + " [hour|day] <value>";
+
+		// Day
+		public const string CmdKeyDay = "day";
+		public const string CmdDesDay = "Sets the current day.";
+		public const string CmdUseDay = CmdPrefix + CmdKeyDay + " <value>";
+
+		// Time
+		public const string CmdKeyHour = "hour";
+		public const string CmdDesHour = "Sets the current hour.";
+		public const string CmdUseHour = CmdPrefix + CmdKeyHour + " <value>";
 
 		// Weather
 		public const string CmdKeyWeather = "weather";
@@ -81,33 +91,33 @@ namespace CommandExtension
 		// Season
 		public const string CmdKeySeason = "season";
         public const string CmdDesSeason = "Changes the current season.";
-        public const string CmdUseSeason = CmdPrefix + CmdKeySeason + " [Spring|Summer|Fall|Winter]";
+        public const string CmdUseSeason = CmdPrefix + CmdKeySeason + " [spring|summer|fall|winter]";
 
 		// Years
 		public const string CmdKeyYear = "years";
         public const string CmdDesYear = "Increase or Decrease the Year.";
-        public const string CmdUseYear = CmdPrefix + CmdKeyYear + " (-)[years]";
+        public const string CmdUseYear = CmdPrefix + CmdKeyYear + " -* <years>";
 
 		//// Currency commands
 		// Money
 		public const string CmdKeyMoney = "money";
         public const string CmdDesMoney = "Alias for !coins.";
-        public const string CmdUseMoney = CmdPrefix + CmdKeyMoney + " (-)[amount]";
+        public const string CmdUseMoney = CmdPrefix + CmdKeyMoney + " -* <amount>";
 
 		// Coins
 		public const string CmdKeyCoins = "coins";
         public const string CmdDesCoins = "Adds or removes Coins.";
-        public const string CmdUseCoins = CmdPrefix + CmdKeyCoins + " (-)[amount]";
+        public const string CmdUseCoins = CmdPrefix + CmdKeyCoins + " -* <amount>";
 
 		// Orbs
 		public const string CmdKeyOrbs = "orbs";
         public const string CmdDesOrbs = "Adds or removes Orbs.";
-        public const string CmdUseOrbs = CmdPrefix + CmdKeyOrbs + " (-)[amount]";
+        public const string CmdUseOrbs = CmdPrefix + CmdKeyOrbs + " -* <amount>";
 
 		// Tickets
 		public const string CmdKeyTickets = "tickets";
         public const string CmdDesTickets = "Adds or removes Tickets.";
-        public const string CmdUseTickets = CmdPrefix + CmdKeyTickets + " (-)[amount]";
+        public const string CmdUseTickets = CmdPrefix + CmdKeyTickets + " -* <amount>";
 
 		//// Player toggles
 		// Jumper
@@ -176,47 +186,47 @@ namespace CommandExtension
         public const string CmdDesCheatFillMuseum = "Toggles cheat-fill museum.";
         public const string CmdUseCheatFillMuseum = CmdPrefix + CmdKeyCheatFillMuseum;
 
-		// Yearfix
-		public const string CmdKeyYearFix = "yearfix";
-        public const string CmdDesYearFix = "Toggles corrected year calculation.";
-        public const string CmdUseYearFix = CmdPrefix + CmdKeyYearFix;
-
 		// Cheats
 		public const string CmdKeyCheats = "cheats";
         public const string CmdDesCheats = "Toggles the game’s built-in cheats and hotkeys.";
         public const string CmdUseCheats = CmdPrefix + CmdKeyCheats;
 
-		//// NPC relationship
+		//// NPC
+		// Tps
+		public const string CmdKeyListNpcs = "npcs";
+		public const string CmdDesListNpcs = "Lists all available NPCs with romance ability.";
+		public const string CmdUseListNpcs = CmdPrefix + CmdKeyListNpcs;
+
 		// Relationship
 		public const string CmdKeyRelationship = "relationship";
 		public const string CmdDesRelationship = "Sets or adds to NPC relationship.";
-		public const string CmdUseRelationship = CmdPrefix + CmdKeyRelationship + " [name|all] [value] [add]*";
+		public const string CmdUseRelationship = CmdPrefix + CmdKeyRelationship + " [[<name>|all] <value>] [add]*";
 
 		// Marry
 		public const string CmdKeyMarry = "marry";
 		public const string CmdDesMarry = "Marries a single or all NPCs.";
-		public const string CmdUseMarry = CmdPrefix + CmdKeyMarry + " [name|all]";
+		public const string CmdUseMarry = CmdPrefix + CmdKeyMarry + " [<name>|all]";
 
 		// Unmarry
 		public const string CmdKeyUnmarry = "unmarry";
 		public const string CmdDesUnmarry = "Alias for !divorce.";
-		public const string CmdUseUnmarry = CmdPrefix + CmdKeyUnmarry + " [name|all]";
+		public const string CmdUseUnmarry = CmdPrefix + CmdKeyUnmarry + " [<name>|all]";
 
 		// Divorce
 		public const string CmdKeyDivorce = "divorce";
 		public const string CmdDesDivorce = "Divorces a single or all NPCs.";
-		public const string CmdUseDivorce = CmdPrefix + CmdKeyDivorce + " [name|all]";
+		public const string CmdUseDivorce = CmdPrefix + CmdKeyDivorce + " [<name>|all]";
 
 		//// Items
 		// Give
 		public const string CmdKeyGiveItem = "give";
         public const string CmdDesGiveItem = "Gives item/s by ID or name.";
-        public const string CmdUseGiveItem = CmdPrefix + CmdKeyGiveItem + " [ID|name] [amount]";
+        public const string CmdUseGiveItem = CmdPrefix + CmdKeyGiveItem + " [<id>|<name>] [amount]*";
 
 		// Items
 		public const string CmdKeyShowItem = "items";
         public const string CmdDesShowItem = "Lists items matching the given name.";
-        public const string CmdUseShowItem = CmdPrefix + CmdKeyShowItem + " [name]";
+        public const string CmdUseShowItem = CmdPrefix + CmdKeyShowItem + " <name>";
 
 		// List
         public const string CmdKeyShowCategorizedItems = "list";
@@ -242,7 +252,7 @@ namespace CommandExtension
 		// Tp
 		public const string CmdKeyTeleport = "tp";
         public const string CmdDesTeleport = "Teleports the player to a location.";
-        public const string CmdUseTeleport = CmdPrefix + CmdKeyTeleport + " [location]";
+        public const string CmdUseTeleport = CmdPrefix + CmdKeyTeleport + " <location>";
 
 		// Tps
 		public const string CmdKeyTeleportLocations = "tps";
@@ -270,10 +280,12 @@ namespace CommandExtension
             // Time Commands
             { CmdKeyPause,					new Command(CmdPrefix + CmdKeyPause,					CmdDesPause,					CmdUsePause,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_Pause(commandInput)) },
             { CmdKeyTimespeed,				new Command(CmdPrefix + CmdKeyTimespeed,				CmdDesTimespeed,				CmdUseTimespeed,				CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_Timespeed(commandInput)) },
-            { CmdKeyDate,					new Command(CmdPrefix + CmdKeyDate,						CmdDesDate,						CmdUseDate,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Date(commandInput)) },
-            { CmdKeyWeather,				new Command(CmdPrefix + CmdKeyWeather,					CmdDesWeather,					CmdUseWeather,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Weather(commandInput)) },
+			{ CmdKeyDate,                   new Command(CmdPrefix + CmdKeyDate,                     CmdDesDate,                     CmdUseDate,                     CommandState.None,        commandInput => CommandMethodes.CommandFunction_Date(commandInput)) },
+			{ CmdKeyDay,					new Command(CmdPrefix + CmdKeyDay,                      CmdDesDay,						CmdUseDay,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Day(commandInput)) },
+			{ CmdKeyHour,                   new Command(CmdPrefix + CmdKeyHour,                     CmdDesHour,                     CmdUseHour,                     CommandState.None,        commandInput => CommandMethodes.CommandFunction_Hour(commandInput)) },
+			{ CmdKeyWeather,				new Command(CmdPrefix + CmdKeyWeather,					CmdDesWeather,					CmdUseWeather,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Weather(commandInput)) },
             { CmdKeySeason,					new Command(CmdPrefix + CmdKeySeason,					CmdDesSeason,					CmdUseSeason,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Season(commandInput)) },
-            { CmdKeyYear,					new Command(CmdPrefix + CmdKeyYear,						CmdDesYear,						CmdUseYear,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Year(commandInput)) },
+            { CmdKeyYear,					new Command(CmdPrefix + CmdKeyYear,						CmdDesYear,						CmdUseYear,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Years(commandInput)) },
           
             // Currency Commands
             { CmdKeyMoney,					new Command(CmdPrefix + CmdKeyMoney,					CmdDesMoney,					CmdUseMoney,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Coins(commandInput)) },
@@ -294,13 +306,15 @@ namespace CommandExtension
             // Misc Commands
             { CmdKeyAutoFillMuseum,			new Command(CmdPrefix + CmdKeyAutoFillMuseum,			CmdDesAutoFillMuseum,			CmdUseAutoFillMuseum,			CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_AutoFillMuseum(commandInput)) },
             { CmdKeyCheatFillMuseum,		new Command(CmdPrefix + CmdKeyCheatFillMuseum,			CmdDesCheatFillMuseum,			CmdUseCheatFillMuseum,			CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_CheatFillMuseum(commandInput)) },
-            { CmdKeyUI,						new Command(CmdPrefix + CmdKeyUI,						CmdDesUI,						CmdUseUI,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_UI(commandInput)) },
+            { CmdKeyUI,						new Command(CmdPrefix + CmdKeyUI,						CmdDesUI,						CmdUseUI,						CommandState.None,        commandInput => CommandMethodes.CommandFunction_Ui(commandInput)) },
             { CmdKeyCheats,					new Command(CmdPrefix + CmdKeyCheats,					CmdDesCheats,					CmdUseCheats,					CommandState.Deactivated, commandInput => CommandMethodes.CommandFunction_Cheats(commandInput)) },
 
             // NPC relationship Commands
-            { CmdKeyRelationship,			new Command(CmdPrefix + CmdKeyRelationship,				CmdDesRelationship,				CmdUseRelationship,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_Relationship(commandInput)) },
-            { CmdKeyDivorce,				new Command(CmdPrefix + CmdKeyDivorce,					CmdDesDivorce,					CmdUseDivorce,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Divorce(commandInput)) },
-            { CmdKeyMarry,					new Command(CmdPrefix + CmdKeyMarry,					CmdDesMarry,					CmdUseMarry,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Marry(commandInput)) },
+            { CmdKeyListNpcs,				new Command(CmdPrefix + CmdKeyListNpcs,                 CmdDesListNpcs,                 CmdUseListNpcs,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_ListNpcs(commandInput)) },
+			{ CmdKeyRelationship,			new Command(CmdPrefix + CmdKeyRelationship,				CmdDesRelationship,				CmdUseRelationship,				CommandState.None,        commandInput => CommandMethodes.CommandFunction_Relationship(commandInput)) },
+			{ CmdKeyDivorce,                new Command(CmdPrefix + CmdKeyDivorce,                  CmdDesDivorce,                  CmdUseDivorce,                  CommandState.None,        commandInput => CommandMethodes.CommandFunction_Divorce(commandInput)) },
+			{ CmdKeyUnmarry,                new Command(CmdPrefix + CmdKeyUnmarry,                  CmdDesUnmarry,                  CmdUseUnmarry,                  CommandState.None,        commandInput => CommandMethodes.CommandFunction_Divorce(commandInput)) },
+			{ CmdKeyMarry,					new Command(CmdPrefix + CmdKeyMarry,					CmdDesMarry,					CmdUseMarry,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Marry(commandInput)) },
 
             // Item Commands
             { CmdKeyGiveItem,				new Command(CmdPrefix + CmdKeyGiveItem,					CmdDesGiveItem,					CmdUseGiveItem,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_GiveItem(commandInput)) },
@@ -311,7 +325,7 @@ namespace CommandExtension
 			{ CmdKeyDevKit,					new Command(CmdPrefix + CmdKeyDevKit,					CmdDesDevKit,					CmdUseDevKit,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_DevKit(commandInput)) },
 
             // Teleport
-            { CmdKeyTeleport,				new Command(CmdPrefix + CmdKeyTeleport,					CmdDesTeleport,					CmdUseTeleport,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_TeleportToScene(commandInput)) },
+            { CmdKeyTeleport,				new Command(CmdPrefix + CmdKeyTeleport,					CmdDesTeleport,					CmdUseTeleport,					CommandState.None,        commandInput => CommandMethodes.CommandFunction_Teleport(commandInput)) },
             { CmdKeyTeleportLocations,		new Command(CmdPrefix + CmdKeyTeleportLocations,		CmdDesTeleportLocations,		CmdUseTeleportLocations,		CommandState.None,        commandInput => CommandMethodes.CommandFunction_TeleportLocations(commandInput)) }
         };
 		

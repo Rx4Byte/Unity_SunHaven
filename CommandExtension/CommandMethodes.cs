@@ -188,40 +188,12 @@ namespace CommandExtension
 			//}
 		}
 
-		// Clear Chat
-		public static void CommandFunction_ClearChat(string commandInput)
-		{
-			QuantumConsole.Instance.ClearConsole();
-		}
-
-		// Toggle disable command feedback (output)
-		public static void CommandFunction_FeedbackDisabled(string commandInput)
-		{
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
-		}
-
-		// Set Command target name
-		//public static void CommandFunction_SetName(string commandInput)
-		//{
-		//	string[] commandTokens = commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries);
-		//
-		//	if (commandTokens.Length >= 2)
-		//	{
-		//		PlayerNameForCommands = commandTokens[1];
-		//		MessageToChat($"Command target name set to {commandTokens[1].ColorText(Color.magenta)}!".ColorText(CommandExtension.YellowColor));
-		//	}
-		//	else
-		//	{
-		//		PlayerNameForCommands = PlayerNameForCommandsFirst;
-		//		MessageToChat($"Command target name {"restoCommandExtension.RedColor".ColorText(CommandExtension.GreenColor)} to {PlayerNameForCommandsFirst.ColorText(Color.magenta)}!".ColorText(CommandExtension.YellowColor));
-		//	}
-		//}
 
 		//// Time Commands
 		// Pause
 		public static void CommandFunction_Pause(string commandInput)
 		{
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+			_ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
 		}
 
 		// Custom time speed
@@ -256,7 +228,7 @@ namespace CommandExtension
 				}
 
 				// Ensure the timespeed command is activated and dont notify player
-				SetCommandState(commandKey: command, activate: true, notifyPlayer: false);
+				CommandStateSet(commandKey: command, activate: true, notifyPlayer: false);
 
 				string setToValue = setValue ? TimeMultiplier.ToString() : "Default";
 				// Inform the player about the activation and the resulting multiplier
@@ -264,55 +236,109 @@ namespace CommandExtension
 			}
 			else
 			{
-				_ = ToggleCommand(command, true);
+				_ = CommandStateToggle(command, true);
 			}
 		}
 
-		// Set Date (only hour and day!)
-		// TODO: split into day command and hour command, rename years command to year
+		// Set Date (hour and day)
 		public static void CommandFunction_Date(string commandInput)
 		{
 			string[] commandTokens = commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries);
 
-			if (commandTokens.Length == 3)
+			if (commandTokens.Length < 3 || !int.TryParse(commandTokens[2], out int dateValue))
 			{
-				DayCycle Date = DayCycle.Instance;
-				if (int.TryParse(commandTokens[2], out int dateValue))
-				{
-					switch (commandTokens[1][0])
-					{
-						// day
-						// TODO: fix too high numbers
-						case 'd':
-							if (dateValue is <= 0 or > 28)
-							{
-								MessageToChat($"day must be between {"1-28".ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.RedColor));
-								return;
-							}
-
-							Date.Time = new DateTime(Date.Time.Year, Date.Time.Month, dateValue, Date.Time.Hour + 1, Date.Time.Minute, Date.Time.Second, Date.Time.Millisecond);
-							_ = typeof(DayCycle).GetMethod("SetInitialTime", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(DayCycle.Instance, null);
-							MessageToChat($"Day set to {dateValue.ToString().ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.NormalColor));
-							break;
-
-						// hour
-						case 'h':
-							if (dateValue is < 6 or > 22) // 6-23 
-							{
-								MessageToChat($"hour must be between {"6-23".ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.RedColor));
-								return;
-							}
-
-							Date.Time = new DateTime(Date.Time.Year, Date.Time.Month, Date.Time.Day, dateValue + 1, Date.Time.Minute, Date.Time.Second, Date.Time.Millisecond);
-							MessageToChat($"Hour set to {dateValue.ToString().ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.NormalColor));
-							break;
-					}
-
-					return;
-				}
+				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
+				return;
 			}
 
-			MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
+			DayCycle date = DayCycle.Instance;
+			switch (commandTokens[1][0])
+			{
+				// day
+				// TODO: fix too high numbers
+				case 'd':
+					if (dateValue is <= 0 or > 28)
+					{
+						MessageToChat($"day must be between {"1-28".ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.RedColor));
+						return;
+					}
+
+					date.Time = new DateTime(date.Time.Year, date.Time.Month, dateValue, date.Time.Hour, date.Time.Minute, date.Time.Second, date.Time.Millisecond, date.Time.Kind);
+					_ = typeof(DayCycle).GetMethod("SetInitialTime", BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(DayCycle.Instance, null);
+					MessageToChat($"Day set to {dateValue.ToString().ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.NormalColor));
+					break;
+
+				// hour
+				case 'h':
+					if (dateValue is < 6 or > 22) // 6-23 
+					{
+						MessageToChat($"hour must be between {"6-23".ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.RedColor));
+						return;
+					}
+
+					date.Time = new DateTime(date.Time.Year, date.Time.Month, date.Time.Day, dateValue, date.Time.Minute, date.Time.Second, date.Time.Millisecond, date.Time.Kind);
+					MessageToChat($"Hour set to {dateValue.ToString().ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.NormalColor));
+					break;
+
+				default:
+					MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
+					break;
+			}
+		}
+
+		// Set Day
+		public static void CommandFunction_Day(string commandInput)
+		{
+			string[] commandTokens = commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+
+			if (commandTokens.Length < 2 || !int.TryParse(commandTokens[1], out int newDay))
+			{
+				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
+				return;
+			}
+
+			if (newDay is < 1 or > 28)
+			{
+				MessageToChat($"Day must be between {"1-28".ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.RedColor));
+				return;
+			}
+
+			DayCycle date = DayCycle.Instance;
+			if (date == null)
+			{
+				ErrorToChat($"DayCycle.Instance is null!".ColorText(CommandExtension.RedColor));
+			}
+
+			date.Time = new DateTime(date.Time.Year, date.Time.Month, newDay, date.Time.Hour, date.Time.Minute, date.Time.Second, date.Time.Millisecond, date.Time.Kind);
+			_ = typeof(DayCycle).GetMethod("SetInitialTime", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(DayCycle.Instance, null);
+			MessageToChat($"Day set to {newDay.ToString().ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.NormalColor));
+		}
+
+		// Set Hour
+		public static void CommandFunction_Hour(string commandInput)
+		{
+			string[] commandTokens = commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+
+			if (commandTokens.Length < 2 || !int.TryParse(commandTokens[1], out int newHour))
+			{
+				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
+				return;
+			}
+
+			if (newHour is < 6 or > 22) // 6-23 
+			{
+				MessageToChat($"Hour must be between {"6-23".ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.RedColor));
+				return;
+			}
+
+			DayCycle date = DayCycle.Instance;
+			if (date == null)
+			{
+				ErrorToChat($"DayCycle.Instance is null!".ColorText(CommandExtension.RedColor));
+			}
+
+			date.Time = new DateTime(date.Time.Year, date.Time.Month, date.Time.Day, newHour, date.Time.Minute, date.Time.Second, date.Time.Millisecond);
+			MessageToChat($"Hour set to {newHour.ToString().ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.NormalColor));
 		}
 
 		// Set Season
@@ -330,20 +356,28 @@ namespace CommandExtension
 			DayCycle Date = DayCycle.Instance;
 			int targetYear = Date.Time.Year + (((int)season2 - (int)Date.Season + 4) % 4);
 
-			DayCycle.Instance.Time = new DateTime(targetYear, Date.Time.Month, 1, Date.Time.Hour, Date.Time.Minute, 0, DateTimeKind.Utc).ToUniversalTime();
+			DayCycle.Instance.Time = new DateTime(targetYear, Date.Time.Month, Date.Time.Day, Date.Time.Hour, Date.Time.Minute, 0, Date.Time.Kind).ToUniversalTime();
 			_ = typeof(DayCycle).GetMethod("SetInitialTime", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(DayCycle.Instance, null);
 
 			MessageToChat("Season set to ".ColorText(CommandExtension.NormalColor) + season2.ToString().ColorText(CommandExtension.WhiteColor));
 		}
 
-		// Set Year
-		public static void CommandFunction_Year(string commandInput)
+		// Add Years
+		public static void CommandFunction_Years(string commandInput)
 		{
 			string[] commandTokens = commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries);
 
 			if (!int.TryParse(Regex.Match(commandInput, @"\d+").Value, out int value))
 			{
 				MessageToChat("Invalid value".ColorText(CommandExtension.RedColor));
+				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
+				return;
+			}
+
+			if (value is > 2490 or < 1)
+			{
+
+				MessageToChat("Value must be between 1-2490".ColorText(CommandExtension.RedColor));
 				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
 				return;
 			}
@@ -359,7 +393,7 @@ namespace CommandExtension
 				}
 				else
 				{
-					MessageToChat("Value must be greater than 0");
+					MessageToChat("The year value cannot be less than 1.");
 					return;
 				}
 			}
@@ -368,10 +402,10 @@ namespace CommandExtension
 				newYear = Date.Time.Year + (value * 4);
 			}
 
-			DayCycle.Instance.Time = new DateTime(newYear, Date.Time.Month, Date.Time.Day, Date.Time.Hour, Date.Time.Minute, 0, DateTimeKind.Utc).ToUniversalTime();
+			DayCycle.Instance.Time = new DateTime(newYear, Date.Time.Month, Date.Time.Day, Date.Time.Hour, Date.Time.Minute, 0, Date.Time.Kind).ToUniversalTime();
 			_ = typeof(DayCycle).GetMethod("SetInitialTime", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(DayCycle.Instance, null);
 
-			MessageToChat($"Year set to {(Date.Time.Year / 4).ToString().ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.NormalColor));
+			MessageToChat($"Year set to {((Date.Time.Year / 4) + 1).ToString().ColorText(CommandExtension.WhiteColor)}!".ColorText(CommandExtension.NormalColor));
 		}
 
 		// Set Weather
@@ -407,23 +441,18 @@ namespace CommandExtension
 			MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
 		}
 
-		// Year Fix
-		public static void CommandFunction_ToggleYearFix(string commandInput)
-		{
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
-		}
 
 		//// Player Commands
 		// Jumper
 		public static void CommandFunction_JumpOver(string commandInput)
 		{
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+			_ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
 		}
 
 		// Dasher (Infinite Air-skips)
 		public static void CommandFunction_DashInfinite(string commandInput)
 		{
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+			_ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
 		}
 
 		// Refill Mana
@@ -437,7 +466,7 @@ namespace CommandExtension
 		// Infinite Mana
 		public static void CommandFunction_ManaInfinite(string commandInput)
 		{
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+			_ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
 		}
 
 		// Refill health
@@ -451,14 +480,14 @@ namespace CommandExtension
 		// Nohit
 		public static void CommandFunction_NoHit(string commandInput)
 		{
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+			_ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
 		}
 
 		// noclip
 		public static void CommandFunction_Noclip(string commandInput)
 		{
 			Player.Instance.rigidbody.bodyType = Commands.ToggleCommandState(Commands.CmdKeyNoclip) ? RigidbodyType2D.Kinematic : RigidbodyType2D.Dynamic;
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+			_ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
 		}
 
 		// Sleep
@@ -467,6 +496,7 @@ namespace CommandExtension
 			Player.Instance.SkipSleep();
 			MessageToChat($"{"Slept".ColorText(CommandExtension.WhiteColor)} once!".ColorText(CommandExtension.NormalColor));
 		}
+
 
 		//// Mine commands
 		// Mines Reset
@@ -515,7 +545,29 @@ namespace CommandExtension
 			}
 		}
 
+
 		//// NPC relationship Commands
+		// List NPCs
+		public static void CommandFunction_ListNpcs(string commandInput)
+		{
+			NPCAI[] npcs = UnityEngine.Object.FindObjectsOfType<NPCAI>();
+			if (npcs == null || npcs.Length == 0)
+			{
+				MessageToChat($"No NPC's found.".ColorText(CommandExtension.RedColor));
+				return;
+			}
+
+			MessageToChat($"[{"NPC".ColorText(CommandExtension.WhiteColor)}{"-list.".ColorText(CommandExtension.DarkGrayColor)}]".ColorText(CommandExtension.BlackColor));
+
+			foreach (NPCAI npc in npcs)
+			{
+				if (npc.Romanceable)
+				{
+					MessageToChat(npc.OriginalName.ColorText(CommandExtension.WhiteColor));
+				}
+			}
+		}
+
 		// Set relationship
 		public static void CommandFunction_Relationship(string commandInput)
 		{
@@ -597,6 +649,7 @@ namespace CommandExtension
 		{
 			Marry(commandInput: commandInput, unmarry: true);
 		}
+
 
 		//// Item Commands
 		// Give Item by Id or Name
@@ -725,46 +778,45 @@ namespace CommandExtension
 		{
 			string[] commandTokens = commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries);
 
-			static void MuseumGiveOrPrintItem(int id, string name, int amount, bool give = false)
+			if (commandTokens.Length < 2)
 			{
-				//Commands.CmdPrintItemIds + " [xp|currency|bonus|pet|decoration|armor|tool|food|crop|fish|normal]"
-				if (give)
-				{
-					Player.Instance.Inventory.AddItem(id, amount, 0, true, true);
-				}
-				else
-				{
-					MessageToChat($"{name} : {id}");
-				}
+				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
+				return;
 			}
 
 			if (!_categorizedItemsAdded && !CategorizeItemList())
 			{
-				MessageToChat($"Database Missing!".ColorText(CommandExtension.RedColor));
+				ErrorToChat($"Database Missing!".ColorText(CommandExtension.RedColor));
 				return;
 			}
 
-			if (!(commandTokens.Length >= 2))
+			string category = commandTokens[1];
+
+			if (!_categorizedItems.TryGetValue(category, out Dictionary<string, int> items))
 			{
+				MessageToChat($"Category {category.ColorText(CommandExtension.WhiteColor)} not found".ColorText(CommandExtension.RedColor));
+				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
 				return;
 			}
 
 			bool getItems = commandTokens.Length >= 3 && commandTokens[2] == "get";
-			int amount = (commandTokens.Length >= 4 && int.TryParse(commandTokens[2], out amount)) ? amount : 1;
-			string category = commandTokens[1];
 
-			if (_categorizedItems.TryGetValue(category, out Dictionary<string, int> items))
+			if (!getItems)
 			{
 				MessageToChat($"[{category.ColorText(CommandExtension.WhiteColor)}{"-Ids".ColorText(CommandExtension.DarkGrayColor)}]".ColorText(CommandExtension.BlackColor));
 
-				foreach (KeyValuePair<string, int> item in _categorizedItems[category])
+				foreach (KeyValuePair<string, int> item in items)
 				{
-					MuseumGiveOrPrintItem(id: item.Value, name: item.Key, amount: amount, give: getItems);
+					MessageToChat($"{item.Key} : {item.Value}");
 				}
 			}
 			else
 			{
-				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
+				int amount = (commandTokens.Length >= 4 && int.TryParse(commandTokens[2], out amount)) ? amount : 1;
+				foreach (KeyValuePair<string, int> item in items)
+				{
+					Player.Instance.Inventory.AddItem(item.Value, amount, 0, true, true);
+				}
 			}
 		}
 
@@ -782,14 +834,15 @@ namespace CommandExtension
 		// Show id on Item Tooltip
 		public static void CommandFunction_ShowItemInfoOnTooltip(string commandInput)
         {
-            _ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+            _ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
         }
 
         // Show id in chat on hover
         public static void CommandFunction_ShowItemInfoOnHover(string commandInput)
         {
-            _ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+            _ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
 		}
+
 
 		//// Currency Commands
 		// Set Coins (Money)
@@ -799,7 +852,7 @@ namespace CommandExtension
 
 			if (!int.TryParse(Regex.Match(commandInput, @"\d+").Value, out int moneyAmount))
 			{
-				MessageToChat("Invalid amount".ColorText(CommandExtension.RedColor));
+				MessageToChat("amount is missing or invalid".ColorText(CommandExtension.RedColor));
 				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
 				return;
 			}
@@ -823,7 +876,7 @@ namespace CommandExtension
 
 			if (!int.TryParse(Regex.Match(commandInput, @"\d+").Value, out int moneyAmount))
 			{
-				MessageToChat("Something wen't wrong..".ColorText(CommandExtension.RedColor));
+				MessageToChat("amount is missing or invalid".ColorText(CommandExtension.RedColor));
 				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
 				return;
 			}
@@ -847,7 +900,7 @@ namespace CommandExtension
 
 			if (!int.TryParse(Regex.Match(commandInput, @"\d+").Value, out int moneyAmount))
 			{
-				MessageToChat("Something wen't wrong..".ColorText(CommandExtension.RedColor));
+				MessageToChat("amount is missing or invalid".ColorText(CommandExtension.RedColor));
 				MessageToChat(Commands.GetCommandByKey(commandTokens[0]).Usage.ColorText(CommandExtension.RedColor));
 				return;
 			}
@@ -864,9 +917,10 @@ namespace CommandExtension
 			}
 		}
 
+
 		//// Teleport
-		// Teleport To // TODO: 
-		public static void CommandFunction_TeleportToScene(string commandInput)
+		// Teleport To
+		public static void CommandFunction_Teleport(string commandInput)
 		{
 			string[] commandTokens = commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries);
 
@@ -903,21 +957,22 @@ namespace CommandExtension
 			}
 		}
 
+
 		//// Misc Commands
 		// Auto-fill museum
 		public static void CommandFunction_AutoFillMuseum(string commandInput)
 		{
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+			_ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
 		}
 
 		// Cheat-fill museum
 		public static void CommandFunction_CheatFillMuseum(string commandInput)
 		{
-			_ = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+			_ = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
 		}
 
 		// UI
-		public static void CommandFunction_UI(string commandInput)
+		public static void CommandFunction_Ui(string commandInput)
 		{
 			string[] commandTokens = commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries);
 
@@ -979,7 +1034,13 @@ namespace CommandExtension
 		// Toggle Cheats
 		public static void CommandFunction_Cheats(string commandInput)
 		{
-			Settings.EnableCheats = ToggleCommand(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+			Settings.EnableCheats = CommandStateToggle(commandInput.Split([' '], StringSplitOptions.RemoveEmptyEntries)[0], true);
+		}
+
+		// Clear Chat
+		public static void CommandFunction_ClearChat(string commandInput)
+		{
+			QuantumConsole.Instance.ClearConsole();
 		}
 
 
@@ -988,17 +1049,25 @@ namespace CommandExtension
 		// ============================================================
 
 		/// <summary>
-		/// Sends a text message to the player's chat when command feedback is enabled.
-		/// Checks the feedback-disabled command flag and logs the message to the QuantumConsole
-		/// instance if chat feedback is currently allowed.
+		/// Sends a text message to the player's chat.
 		/// </summary>
 		/// <param name="message">The text to send to the player's chat.</param>
 		public static void MessageToChat(string message)
-        {
+		{
 			QuantumConsole.Instance.LogPlayerText(message);
 		}
 
-		private static bool ToggleCommand(string commandKey, bool notifyPlayer = true)
+		/// <summary>
+		/// Sends a text message to the player's chat and a message about reporting the error.
+		/// </summary>
+		/// <param name="message">The text to send to the player's chat.</param>
+		public static void ErrorToChat(string message)
+		{
+			QuantumConsole.Instance.LogPlayerText(message);
+			QuantumConsole.Instance.LogPlayerText("Internal Error, consider reporting this error to the mod author.".ColorText(CommandExtension.RedColor));
+		}
+
+		private static bool CommandStateToggle(string commandKey, bool notifyPlayer = true)
 		{
 			bool isActive = Commands.ToggleCommandState(commandKey);
 			string state = isActive ? "On".ColorText(CommandExtension.GreenColor) : "Off".ColorText(CommandExtension.RedColor);
@@ -1011,7 +1080,7 @@ namespace CommandExtension
 			return isActive;
 		}
 
-		private static void SetCommandState(string commandKey, bool activate = true, bool notifyPlayer = true)
+		private static void CommandStateSet(string commandKey, bool activate = true, bool notifyPlayer = true)
         {
             Commands.SetCommandState(commandKey, activate);
             string state = activate
