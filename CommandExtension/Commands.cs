@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using CommandExtension.Models;
+using QFSW.QC;
 using QFSW.QC.Utilities;
 using UnityEngine;
+using Wish;
 
 namespace CommandExtension
 {
@@ -357,21 +359,21 @@ namespace CommandExtension
 			// remove prefix from command input
 			commandInput = commandInput.Remove(0, 1);
 
-			// get command key from input, resolve the alias and replace the command key commandInput with the resolved command key
+			// get command key from input, resolve the alias and replace the command key (alias) in commandInput with the resolved command key
 			string commandKey = commandInput.Split([' '], System.StringSplitOptions.RemoveEmptyEntries)[0];
 			string resolvedCommandKey = ResolveCommandAlias(commandKey);
+
+			// always try to replace command alias with command
 			commandInput = commandInput.Replace(commandKey, resolvedCommandKey);
 			
 			// if the command is registered, invoke the command
 			if (GeneratedCommands.TryGetValue(resolvedCommandKey, out Command command))
             {
-				command.Action?.Invoke(commandInput);
+				command.Action.Invoke(commandInput);
 			}
 			else
 			{
-				CommandMethodes.MessageToChat($"Unknown Command: ".ColorText(CommandExtension.RedColor)
-					+ commandKey.ColorText(Color.white)
-					+ "\n" + commandInput.ColorText(CommandExtension.DarkGrayColor));
+				CommandMethodes.MessageToChat($"Unknown Command: ".ColorText(CommandExtension.RedColor) + commandKey.ColorText(Color.white));
 			}
         }
 

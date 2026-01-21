@@ -35,17 +35,18 @@ namespace AutoFillMuseum
 		public static void Postfix(HungryMonster __instance, DecorationPositionData decorationData)
 		{
 			// Only proceed for actual museum bundles
-			if (!ModEnabled.Value || __instance.bundleType != BundleType.MuseumBundle)
+			if (!ModEnabled.Value || __instance.bundleType != BundleType.MuseumBundle || __instance.name.ToLower().Contains("money"))
 			{
 				return;
 			}
 
 			// Ensure a valid player context for auto-fill
-			Player player = Player.Instance;
-			if (player.Inventory == null || player.Inventory.Items == null)
+			if (Player.Instance == null || Player.Instance.Inventory == null || Player.Instance.Inventory.Items == null)
 			{
 				return;
 			}
+
+			Player player = Player.Instance;
 
 			HungryMonster monster = __instance;
 			if (monster.sellingInventory == null || monster.sellingInventory.Items == null)
@@ -55,13 +56,8 @@ namespace AutoFillMuseum
 
 			foreach (SlotItemData monsterSlotItemData in monster.sellingInventory.Items)
 			{
-				if (monsterSlotItemData == null || monster.name.ToLower().Contains("money") || monsterSlotItemData.item == null)
-				{
-					continue;
-				}
-
-				// is slot number = slot index? --> monster.sellingInventory.IsSlotFull(monsterSlotItemData.slot.slotNumber)
-				if (monsterSlotItemData.slot.numberOfItemToAccept == 0 || monsterSlotItemData.amount >= monsterSlotItemData.slot.numberOfItemToAccept)
+				if (monsterSlotItemData == null || monsterSlotItemData.item == null
+					|| monsterSlotItemData.slot.numberOfItemToAccept == 0 || monsterSlotItemData.amount >= monsterSlotItemData.slot.numberOfItemToAccept)
 				{
 					continue;
 				}
@@ -73,10 +69,9 @@ namespace AutoFillMuseum
 						continue;
 					}
 					
-					int itemId = playerSlotItemData.id;
 					int transferAmount = Math.Min(playerSlotItemData.amount, monsterSlotItemData.slot.numberOfItemToAccept - monsterSlotItemData.amount);
 
-					monster.sellingInventory.AddItem(item: itemId, amount: transferAmount, slot: monsterSlotItemData.slotNumber, sendNotification: false);
+					monster.sellingInventory.AddItem(item: playerSlotItemData.id, amount: transferAmount, slot: monsterSlotItemData.slotNumber, sendNotification: false);
 
 					ItemIcon itemIcon = monsterSlotItemData.slot.GetComponentInChildren<ItemIcon>();
 					if (!itemIcon)
@@ -89,12 +84,12 @@ namespace AutoFillMuseum
 					itemIcon.UpdateAmount(monsterSlotItemData.slot.numberOfItemToAccept);
 
 					string itemName = "unkown";
-					if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(itemId, out ItemSellInfo itemSellInfo))
+					if (ItemInfoDatabase.Instance.allItemSellInfos.TryGetValue(playerSlotItemData.id, out ItemSellInfo itemSellInfo))
 					{
 						itemName = itemSellInfo.name;
 					}
 
-					_ = player.Inventory.RemoveItem(id: itemId, amount: transferAmount);
+					_ = player.Inventory.RemoveItem(id: playerSlotItemData.id, amount: transferAmount);
 					QuantumConsole.Instance.LogPlayerText($"Removed: {transferAmount.ToString().ColorText(Color.white)} x " + $"{itemName.ColorText(Color.white)}");
 				}
 			}

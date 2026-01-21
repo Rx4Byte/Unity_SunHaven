@@ -28,16 +28,6 @@ namespace CommandExtension
 		[Command(Commands.CmdKeyClearChat, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_ClearChat() { }
 
-		// Feedback toggle
-		//[Command(Commands.CmdKeyFeedbackDisabled, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
-		//private static void GenerateCommand_FeedbackDisabled() { }
-
-
-		// Command target name
-		//[Command(Commands.CmdKeyName, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
-		//private static void GenerateCommand_Name(string playerName) { }
-
-
 		// Mine commands
 		[Command(Commands.CmdKeyMineReset, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_MineReset() { }
@@ -47,7 +37,6 @@ namespace CommandExtension
 
 		[Command(Commands.CmdKeyMineOverfill, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_MineOverfill() { }
-
 
 		// Time commands
 		[Command(Commands.CmdKeyPause, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
@@ -74,10 +63,6 @@ namespace CommandExtension
 		[Command(Commands.CmdKeyWeather, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		public static void GenerateCommand_Weather(string raining_heatwave_clear) { }
 
-		//[Command(Commands.CmdFixYear, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
-		//private static void fm40(string value) { }
-
-
 		// Currency commands
 		[Command(Commands.CmdKeyMoney, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Money(string amount) { }
@@ -90,7 +75,6 @@ namespace CommandExtension
 
 		[Command(Commands.CmdKeyTickets, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Tickets(string amount) { }
-
 
 		// Player
 		[Command(Commands.CmdKeySleep, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
@@ -123,7 +107,6 @@ namespace CommandExtension
 		[Command(Commands.CmdKeyNoHit, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_NoHit() { }
 
-
 		// Misc
 		[Command(Commands.CmdKeyAutoFillMuseum, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_AutoFillMuseum() { }
@@ -137,7 +120,6 @@ namespace CommandExtension
 		[Command(Commands.CmdKeyCheats, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Cheats() { }
 
-
 		// NPC relationship
 		[Command(Commands.CmdKeyMarry, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Marry(string NPC_Name) { }
@@ -150,7 +132,6 @@ namespace CommandExtension
 
 		[Command(Commands.CmdKeyRelationship, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
 		private static void GenerateCommand_Relationship(string NPC_Name_and_value) { }
-
 
 		// Items
 		[Command(Commands.CmdKeyShowCategorizedItems, QFSW.QC.Platform.AllPlatforms, QFSW.QC.MonoTargetType.Single)]
