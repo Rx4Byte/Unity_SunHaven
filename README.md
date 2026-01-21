@@ -215,3 +215,6 @@ Create a folder at the repository root named `.dependencies` *(git-ignored)* and
 1. Clone the repository.
 2. Create the `.dependencies` folder at the solution root.
 3. Copy [required DLLs](#required-files) from your Sun Haven game install and/or BepInEx into `.dependencies`.
+
+## License
+All versions of this mod, past and future, are licensed under the GNU GPLv3.
